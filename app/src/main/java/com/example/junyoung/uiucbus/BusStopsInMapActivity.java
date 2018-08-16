@@ -4,8 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
 import com.example.junyoung.uiucbus.httpclient.endpoints.BusStopsEndpoints;
@@ -17,15 +21,20 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class BusStopsInMapActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class BusStopsInMapActivity extends AppCompatActivity implements
+  GoogleMap.OnMarkerClickListener,
+  OnMapReadyCallback {
   private static final String TAG = "BusStopsInMapActivity";
 
   private String userLatitude;
@@ -34,15 +43,34 @@ public class BusStopsInMapActivity extends AppCompatActivity implements OnMapRea
 
   private GoogleMap map;
 
+  @BindView(R.id.bottom_sheet_in_bus_stops_activity)
+  RelativeLayout bottomSheet;
+  @BindView(R.id.textview_bus_stop_name_bottom_sheet)
+  TextView busStopNameTextView;
+  @BindView(R.id.textview_bus_stop_code_bottom_sheet)
+  TextView busStopCodeTextView;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_bus_stops_in_map);
+    ButterKnife.bind(this);
 
     Intent intent = getIntent();
     userLatitude = intent.getStringExtra("latitude");
     userLongitude = intent.getStringExtra("longitude");
+
+    BottomSheetBehavior bottomSheetBehavior =
+      BottomSheetBehavior.from(bottomSheet);
+
+    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+    bottomSheet.post(new Runnable() {
+      @Override
+      public void run() {
+        Log.d(TAG, String.valueOf(pxToDp(bottomSheet.getHeight())));
+      }
+    });
 
     // Log.d(TAG, userLatitude + " " + userLongitude);
 
@@ -51,7 +79,8 @@ public class BusStopsInMapActivity extends AppCompatActivity implements OnMapRea
     Call<BusStops> call = service.getNearestStops(
       Constants.API_KEY,
       userLatitude,
-      userLongitude
+      userLongitude,
+      "10"
     );
 
     call.enqueue(new Callback<BusStops>() {
@@ -61,6 +90,7 @@ public class BusStopsInMapActivity extends AppCompatActivity implements OnMapRea
           BusStops responseBody = response.body();
           if (responseBody != null) {
             busStopList = responseBody.getStops();
+            Log.d(TAG, String.valueOf(busStopList.size()));
           }
         }
 
@@ -83,11 +113,15 @@ public class BusStopsInMapActivity extends AppCompatActivity implements OnMapRea
 
     createMarkers();
 
-    map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+    map.moveCamera(CameraUpdateFactory.newLatLngZoom(
       new LatLng(
         Double.valueOf(userLatitude),
         Double.valueOf(userLongitude)
-      ), 15.0f), 1000, null);
+      ),
+      16.0f)
+    );
+
+    map.setOnMarkerClickListener(this);
   }
 
   private void createMarkers() {
@@ -98,11 +132,35 @@ public class BusStopsInMapActivity extends AppCompatActivity implements OnMapRea
           stopPoints.get(j).getStopLat(),
           stopPoints.get(j).getStopLon()
         );
-        map.addMarker(new MarkerOptions()
+        Marker marker = map.addMarker(new MarkerOptions()
           .position(markerPosition)
-          .title(busStopList.get(i).getStopName())
+          .title(stopPoints.get(j).getStopName())
         );
+        marker.setTag(stopPoints.get(j));
       }
     }
+  }
+
+  @Override
+  public boolean onMarkerClick(final Marker marker) {
+    StopPoint stopPointInfo = (StopPoint) marker.getTag();
+
+    if (stopPointInfo != null) {
+      busStopNameTextView.setText(stopPointInfo.getStopName());
+      busStopCodeTextView.setText(stopPointInfo.getCode());
+    }
+
+    BottomSheetBehavior bottomSheetBehavior =
+      BottomSheetBehavior.from(bottomSheet);
+
+    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+
+    return false;
+  }
+
+  public int pxToDp(int px) {
+    DisplayMetrics displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
+    int dp = Math.round(px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
+    return dp;
   }
 }
