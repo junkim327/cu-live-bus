@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -34,8 +33,10 @@ import retrofit2.Response;
 
 public class BusStopsInMapActivity extends AppCompatActivity implements
   GoogleMap.OnMarkerClickListener,
+  GoogleMap.OnInfoWindowClickListener,
   OnMapReadyCallback {
   private static final String TAG = "BusStopsInMapActivity";
+  public static final String EXTRA_STOPID = "com.example.junyoung.uiucbus.EXTRA_STOPID";
 
   private String userLatitude;
   private String userLongitude;
@@ -64,13 +65,6 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
       BottomSheetBehavior.from(bottomSheet);
 
     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-
-    bottomSheet.post(new Runnable() {
-      @Override
-      public void run() {
-        Log.d(TAG, String.valueOf(pxToDp(bottomSheet.getHeight())));
-      }
-    });
 
     // Log.d(TAG, userLatitude + " " + userLongitude);
 
@@ -122,6 +116,7 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
     );
 
     map.setOnMarkerClickListener(this);
+    map.setOnInfoWindowClickListener(this);
   }
 
   private void createMarkers() {
@@ -158,9 +153,14 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
     return false;
   }
 
-  public int pxToDp(int px) {
-    DisplayMetrics displayMetrics = getApplicationContext().getResources().getDisplayMetrics();
-    int dp = Math.round(px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
-    return dp;
+  @Override
+  public void onInfoWindowClick(final Marker marker) {
+    StopPoint stopPointInfo = (StopPoint) marker.getTag();
+
+    Intent intent = new Intent(this, BusDeparturesActivity.class);
+    if (stopPointInfo != null) {
+      intent.putExtra(EXTRA_STOPID, stopPointInfo.getStopId());
+    }
+    startActivity(intent);
   }
 }
