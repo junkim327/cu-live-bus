@@ -1,4 +1,4 @@
-package com.example.junyoung.uiucbus.httpclient.objects;
+package com.example.junyoung.uiucbus.httpclient.pojos;
 
 import com.google.gson.annotations.SerializedName;
 
