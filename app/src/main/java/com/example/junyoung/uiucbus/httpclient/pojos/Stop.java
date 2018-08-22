@@ -1,5 +1,6 @@
 package com.example.junyoung.uiucbus.httpclient.pojos;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ public class Stop {
   private String stopId;
   @SerializedName("stop_name")
   private String stopName;
+  @Expose
+  private double distance;
   @SerializedName("stop_points")
   private ArrayList<StopPoint> stopPoints;
 
@@ -18,6 +21,10 @@ public class Stop {
 
   public String getStopName() {
     return stopName;
+  }
+
+  public Double getDistance() {
+    return distance;
   }
 
   public ArrayList<StopPoint> getStopPoints() {
