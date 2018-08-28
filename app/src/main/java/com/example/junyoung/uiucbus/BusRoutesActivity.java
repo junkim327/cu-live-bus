@@ -31,7 +31,9 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
   public static final String EXTRA_SHAPEID = "com.example.junyoung.uiucbus.EXTRA_SHAPEID";
 
   private String busName;
+  private String busColor;
   private String busTripId;
+  private String busStopName;
   private String busShapeId;
   private String busVehicleId;
   private ArrayList<StopTimes> stopTimesList;
@@ -61,8 +63,10 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
     Intent intent = getIntent();
 
     busName = intent.getStringExtra(BusDeparturesActivity.EXTRA_BUSNAME);
+    busColor = intent.getStringExtra(BusDeparturesActivity.EXTRA_BUSCOLOR);
     busTripId = intent.getStringExtra(BusDeparturesActivity.EXTRA_TRIPID);
     busShapeId = intent.getStringExtra(BusDeparturesActivity.EXTRA_SHAPEID);
+    busStopName = intent.getStringExtra(BusStopsInMapActivity.EXTRA_STOPNAME);
     busVehicleId = intent.getStringExtra(BusDeparturesActivity.EXTRA_VEHICLEID);
 
     setSupportActionBar(busRoutesToolbar);
@@ -100,6 +104,8 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
     adapter = new BusRoutesAdapter(this, stopTimesList);
     busRoutesRecyclerView.setAdapter(adapter);
 
+    busRoutesRecyclerView.addItemDecoration(new RouteItemDecoration(getApplicationContext(), busColor));
+
     StopTimesEndPoints service =
       RetrofitBuilder.getRetrofitInstance().create(StopTimesEndPoints.class);
     Call<StopTimesByTrip> call = service.getStopTimesByTrip(
@@ -113,6 +119,15 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
         stopTimesList = response.body().getStopTimes();
         if (stopTimesList != null) {
           adapter.updateStopTimesList(stopTimesList);
+          for (int i = 0; i < stopTimesList.size(); i++) {
+            if (stopTimesList.get(i).getStopPoint().getStopName().equals(busStopName)) {
+              if ((stopTimesList.size() - i) <= 7) {
+                busRoutesRecyclerView.scrollToPosition(stopTimesList.size() - 1);
+              }
+              busRoutesRecyclerView.scrollToPosition(i);
+            }
+          }
+          busRoutesAppBarLayout.setExpanded(false);
         }
       }
 
