@@ -45,7 +45,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="40dp"
                 android:layout_marginTop="58dp"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
@@ -57,9 +56,12 @@
                 android:id="@+id/imageButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="80dp"
+                android:layout_gravity="bottom|center_horizontal"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="100dp"
+                android:background="@android:color/transparent"
                 android:onClick="onClick"
-                app:srcCompat="@drawable/google_maps_custom_marker" />
+                app:srcCompat="@drawable/map_button" />
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar_bus_routes"
