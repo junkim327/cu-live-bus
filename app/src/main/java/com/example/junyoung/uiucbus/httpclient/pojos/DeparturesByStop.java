@@ -8,13 +8,13 @@ public class DeparturesByStop {
   @Expose
   private Status status;
   @Expose
-  private ArrayList<Departures> departures;
+  private ArrayList<Departure> departures;
 
   public Status getStatus() {
     return status;
   }
 
-  public ArrayList<Departures> getDepartures() {
+  public ArrayList<Departure> getDepartures() {
     return departures;
   }
 }
