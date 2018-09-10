@@ -3,15 +3,22 @@ package com.example.junyoung.uiucbus.httpclient.pojos;
 import java.util.ArrayList;
 
 public class BusInfo {
+  private String stopId;
+  private String stopCode;
+  private String stopName;
   private String headsign;
   private String tripHeadSign;
   private String routeColor;
   private String routeTextColor;
-  private ArrayList<String> stopId = new ArrayList<>();
   private ArrayList<String> tripId = new ArrayList<>();
   private ArrayList<String> shapeId = new ArrayList<>();
   private ArrayList<String> expected = new ArrayList<>();
   private ArrayList<String> vehicleId = new ArrayList<>();
+
+  public BusInfo(String stopId, String stopCode) {
+    this.stopId = stopId;
+    this.stopCode = stopCode;
+  }
 
   public BusInfo(String headsign, String tripHeadSign, String tripId, String shapeId,
                  String vehicleId, String expected, String routeColor, String routeTextColor) {
@@ -24,6 +31,14 @@ public class BusInfo {
     this.shapeId.add(shapeId);
     this.expected.add(expected);
     this.vehicleId.add(vehicleId);
+  }
+
+  public String getStopId() {
+    return stopId;
+  }
+
+  public String getStopCode() {
+    return stopCode;
   }
 
   public String getHeadsign() {
@@ -40,10 +55,6 @@ public class BusInfo {
 
   public String getRouteTextColor() {
     return routeTextColor;
-  }
-
-  public ArrayList<String> getStopId() {
-    return stopId;
   }
 
   public ArrayList<String> getTripId() {
@@ -67,10 +78,6 @@ public class BusInfo {
     this.shapeId.add(shapeId);
     this.expected.add(expected);
     this.vehicleId.add(vehicleId);
-  }
-
-  public void setStopId(String stopId) {
-    this.stopId.add(stopId);
   }
 
   public void setTripId(String tripId) {

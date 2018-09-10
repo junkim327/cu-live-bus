@@ -19,11 +19,13 @@ public class BusSchedules {
     return busInfoList;
   }
 
-  public void setBusName(String busName) {
-    busNameList.add(busName);
+  public void addBusName(String busName) {
+    this.busNameList.add(busName);
   }
 
-  public void setBusInfo(BusInfo busInfo) {
+  public void addBusInfo(BusInfo busInfo) {
     this.busInfoList.add(busInfo);
   }
+
+  public void addBusStopInfo(BusInfo busInfo) { this.busInfoList.add(busInfo); }
 }
