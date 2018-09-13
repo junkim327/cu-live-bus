@@ -2,15 +2,19 @@ package com.example.junyoung.uiucbus.httpclient.pojos;
 
 import com.google.gson.annotations.Expose;
 
-public class Departures {
+public class Service {
+  @Expose
+  private Point end;
   @Expose
   private Trip trip;
   @Expose
   private Route route;
   @Expose
-  private String headsign;
-  @Expose
-  private String expected;
+  private Point begin;
+
+  public Point getEnd() {
+    return end;
+  }
 
   public Trip getTrip() {
     return trip;
@@ -20,11 +24,7 @@ public class Departures {
     return route;
   }
 
-  public String getHeadsign() {
-    return headsign;
-  }
-
-  public String getExpected() {
-    return expected;
+  public Point getBegin() {
+    return begin;
   }
 }
