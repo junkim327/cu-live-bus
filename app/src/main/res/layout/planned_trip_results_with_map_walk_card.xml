@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/image_walk_icon_planned_trips_result_walk_card"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/text_walk_minutes_planned_trips_result_walk_card"
+        app:layout_constraintEnd_toStartOf="@+id/text_walk_distance_planned_trips_result_walk_card"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:srcCompat="@drawable/ic_directions_walk" />
+
+    <TextView
+        android:id="@+id/text_walk_distance_planned_trips_result_walk_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:fontFamily="@font/lato"
+        android:text="@string/no_info"
+        app:layout_constraintBottom_toBottomOf="@+id/image_walk_icon_planned_trips_result_walk_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/image_walk_icon_planned_trips_result_walk_card"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:text="Walk 384m" />
+
+    <TextView
+        android:id="@+id/text_walk_minutes_planned_trips_result_walk_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:fontFamily="@font/lato"
+        android:text="@string/no_info"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image_walk_icon_planned_trips_result_walk_card"
+        tools:text="6min" />
+
+    <View
+        android:id="@+id/view"
+        style="@style/Divider"
+        android:layout_width="0dp"
+        app:layout_constraintBottom_toBottomOf="@+id/text_walk_minutes_planned_trips_result_walk_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/text_walk_distance_planned_trips_result_walk_card"
+        app:layout_constraintTop_toBottomOf="@+id/text_walk_distance_planned_trips_result_walk_card"
+        app:layout_constraintVertical_bias="1.0" />
+</android.support.constraint.ConstraintLayout>

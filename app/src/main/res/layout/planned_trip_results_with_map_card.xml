@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    android:background="@android:color/white"
+    android:elevation="4dp">
+
+    <TextView
+        android:id="@+id/textview_travel_time_planned_trips_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/lato_bold"
+        android:text="TextView"
+        android:textColor="@color/textMainColor"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@+id/textview_time_interval_planned_trips_card"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="43min" />
+
+    <TextView
+        android:id="@+id/textview_time_interval_planned_trips_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="TextView"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerview_trips_info_planned_trips_card"
+        app:layout_constraintStart_toStartOf="@+id/textview_travel_time_planned_trips_card"
+        app:layout_constraintTop_toBottomOf="@+id/textview_travel_time_planned_trips_card"
+        tools:text="p.m. 8:39-p.m. 9:22" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerview_trips_info_planned_trips_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textview_time_interval_planned_trips_card" />
+
+    <TextView
+        android:id="@+id/textview_less_walking_planned_trips_card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/lato"
+        android:text="Less walking"
+        android:textColor="@color/less_walking_text_color"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/textview_travel_time_planned_trips_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+</android.support.constraint.ConstraintLayout>
