@@ -8,9 +8,13 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutParams;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 public class RouteItemDecoration extends RecyclerView.ItemDecoration {
+  public static final String TAG = "RouteItemDecoration";
+
   private Context context;
   private Paint routePaint;
   private float strokeWidth = 12.0f;
@@ -37,20 +41,28 @@ public class RouteItemDecoration extends RecyclerView.ItemDecoration {
     for (int i = 0; i < childCount; i++) {
       View child = parent.getChildAt(i);
       LayoutParams params = (LayoutParams) child.getLayoutParams();
+
       int cardTop = child.getTop();
       int cardBottom = child.getBottom();
+      int cardHeight = child.getHeight() * i;
       float cardVerticalCenter = (cardTop + cardBottom) / 2;
-      float routeLeft = child.findViewById(R.id.textview_bus_stop_name_bus_routes_card).getLeft()
+
+      TextView busStopNameTextView =
+        child.findViewById(R.id.textview_bus_stop_name_bus_routes_card);
+      TextView busStopCodeTextView =
+        child.findViewById(R.id.textview_bus_stop_code_bus_routes_card);
+      float routeLeft =busStopNameTextView.getLeft()
         - DeviceDimensionsHelper.convertDpToPixel(16, context);
-      float markerLeft = routeLeft - 2 * strokeWidth;
-      float markerTop = cardVerticalCenter - 20.0f;
+      float markerLeft = routeLeft - DeviceDimensionsHelper.convertDpToPixel(8, context)
+        - DeviceDimensionsHelper.convertPixelsToDp(12, context);
+      float markerTop = cardVerticalCenter - DeviceDimensionsHelper.convertDpToPixel(8, context);
+
 
       int cardPosition = params.getViewAdapterPosition();
       if (cardPosition == 0) {
         c.drawLine(routeLeft, cardVerticalCenter, routeLeft, cardBottom, routePaint);
       } else if (cardPosition == parent.getAdapter().getItemCount() - 1) {
         c.drawLine(routeLeft, cardTop, routeLeft, cardVerticalCenter, routePaint);
-
       } else {
         c.drawLine(routeLeft, cardTop, routeLeft, cardBottom, routePaint);
       }
