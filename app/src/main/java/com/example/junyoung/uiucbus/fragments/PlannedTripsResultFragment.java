@@ -18,6 +18,7 @@ import com.example.junyoung.uiucbus.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapters.PlannedTripResultsAdapter;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.httpclient.pojos.Itinerary;
+import com.example.junyoung.uiucbus.httpclient.pojos.Leg;
 
 import java.util.ArrayList;
 
@@ -28,7 +29,9 @@ public class PlannedTripsResultFragment extends Fragment {
   public static final String EXTRA_ITINERARIES =
     "com.example.junyoung.uiucbus.fragments.EXTRA_ITINERARIES";
 
-  private ArrayList<Itinerary> itineraries;
+  private ArrayList<Leg> busList = null;
+  private ArrayList<Leg> walkList = null;
+  private ArrayList<Itinerary> itineraries = null;
   private PlannedTripResultsClickListener onPlannedTripResultsCallback;
 
   @BindView(R.id.recyclerview_planned_trips_result)
@@ -39,7 +42,9 @@ public class PlannedTripsResultFragment extends Fragment {
   ImageView noTransitRoutesImageView;
 
   public interface PlannedTripResultsClickListener {
-    void onPlannedTripResultsClickListener(Itinerary itinerary);
+    void onPlannedTripResultsClickListener(Itinerary itinerary,
+                                           ArrayList<Leg> busList,
+                                           ArrayList<Leg> walkList);
   }
 
   public static PlannedTripsResultFragment newInstance(ArrayList<Itinerary> itineraries) {
@@ -96,7 +101,12 @@ public class PlannedTripsResultFragment extends Fragment {
       RecyclerviewClickListener listener = new RecyclerviewClickListener() {
         @Override
         public void onClick(View view, int position) {
-          onPlannedTripResultsCallback.onPlannedTripResultsClickListener(itineraries.get(position));
+          setBusandWalkList(itineraries.get(position));
+          onPlannedTripResultsCallback.onPlannedTripResultsClickListener(
+            itineraries.get(position),
+            busList,
+            walkList
+          );
         }
       };
       RecyclerView.Adapter adapter = new PlannedTripResultsAdapter(
@@ -110,4 +120,15 @@ public class PlannedTripsResultFragment extends Fragment {
     return view;
   }
 
+  private void setBusandWalkList(Itinerary itinerary) {
+    busList = new ArrayList<>();
+    walkList = new ArrayList<>();
+    for (Leg leg : itinerary.getLegs()) {
+      if (leg.getType().contentEquals(getResources().getString(R.string.type_service))) {
+        busList.add(leg);
+      } else {
+        walkList.add(leg);
+      }
+    }
+  }
 }

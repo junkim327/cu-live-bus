@@ -44,7 +44,7 @@ public class GoogleSearchFragment extends Fragment {
   Button chooseOnMapButton;
 
   public interface OnActivityResultListener {
-    void onActivityResultExecuted(String placeName, LatLng placeLatLng);
+    void onActivityResultExecuted(String placeName, LatLng placeLatLng, String hint);
   }
 
   public static GoogleSearchFragment newInstance(String hint) {
@@ -135,7 +135,7 @@ public class GoogleSearchFragment extends Fragment {
           Place place = PlaceAutocomplete.getPlace(getContext(), data);
           String placeName = place.getName().toString();
           LatLng placeLatLng = place.getLatLng();
-          onActivityResultCallback.onActivityResultExecuted(placeName, placeLatLng);
+          onActivityResultCallback.onActivityResultExecuted(placeName, placeLatLng, hint);
         }
       }
     } else if (requestCode == PLACE_PICKER_REQUEST) {
@@ -144,7 +144,7 @@ public class GoogleSearchFragment extends Fragment {
           Place place = PlacePicker.getPlace(getContext(), data);
           String placeName = place.getName().toString();
           LatLng placeLatLng = place.getLatLng();
-          onActivityResultCallback.onActivityResultExecuted(placeName, placeLatLng);
+          onActivityResultCallback.onActivityResultExecuted(placeName, placeLatLng, hint);
         }
       }
     }

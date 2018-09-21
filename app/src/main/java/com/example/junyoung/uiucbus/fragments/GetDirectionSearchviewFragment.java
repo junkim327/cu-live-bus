@@ -6,17 +6,19 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 
 import com.example.junyoung.uiucbus.Constants;
 import com.example.junyoung.uiucbus.MainActivity;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
-import com.example.junyoung.uiucbus.httpclient.endpoints.PlannedTripsEndpoints;
+import com.example.junyoung.uiucbus.httpclient.services.PlannedTripsServices;
 import com.example.junyoung.uiucbus.httpclient.pojos.Itinerary;
 import com.example.junyoung.uiucbus.httpclient.pojos.PlannedTrips;
 import com.google.android.gms.maps.model.LatLng;
@@ -26,11 +28,15 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import io.reactivex.schedulers.Schedulers;
+
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 
 public class GetDirectionSearchviewFragment extends Fragment {
   public static final String EXTRA_PLACENAME =
@@ -43,6 +49,7 @@ public class GetDirectionSearchviewFragment extends Fragment {
   private Boolean isTopEditText;
   private Boolean isFirstCreated;
 
+  private Unbinder unbinder;
   private Disposable disposable;
   private LatLng destinationLatLng;
   private LatLng startingPointLatLng;
@@ -57,6 +64,8 @@ public class GetDirectionSearchviewFragment extends Fragment {
   EditText bottomSideEditText;
   @BindView(R.id.image_button_reverse_set_search_locations)
   ImageButton reversebutton;
+  @BindView(R.id.progressbar_set_search_location)
+  ProgressBar progressBar;
 
   public interface onEditTextClickListener {
     public void onEditTextClick(boolean isTopEditText, String hint);
@@ -105,7 +114,7 @@ public class GetDirectionSearchviewFragment extends Fragment {
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                            @Nullable Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.fragment_set_search_locations, container, false);
-    ButterKnife.bind(this, view);
+    unbinder = ButterKnife.bind(this, view);
 
     topSideEditText.setEnabled(true);
     topSideEditText.setFocusable(false);
@@ -122,7 +131,18 @@ public class GetDirectionSearchviewFragment extends Fragment {
     topSideEditText.setHint(bottomSideEditTextHint);
     bottomSideEditText.setHint(topSideEditTextHint);
 
-    // TODO: reverse if one edittext contains a place name, etc...
+    String topSideEditTextContent = topSideEditText.getText().toString();
+    String bottomSideEditTextContent = bottomSideEditText.getText().toString();
+    topSideEditText.setText(bottomSideEditTextContent);
+    bottomSideEditText.setText(topSideEditTextContent);
+
+    if (!topSideEditTextContent.contentEquals("") && !bottomSideEditTextContent.equals("")) {
+      LatLng temp = startingPointLatLng;
+      startingPointLatLng = destinationLatLng;
+      destinationLatLng = temp;
+
+      getPlannedTrips();
+    }
   }
 
   @OnClick(R.id.image_button_exit_set_search_locations)
@@ -174,12 +194,13 @@ public class GetDirectionSearchviewFragment extends Fragment {
   }
 
   private void getPlannedTrips() {
+    progressBar.setVisibility(VISIBLE);
     String originLat = String.valueOf(startingPointLatLng.latitude);
     String originLon = String.valueOf(startingPointLatLng.longitude);
     String destinationLat = String.valueOf(destinationLatLng.latitude);
     String destinationLon = String.valueOf(destinationLatLng.longitude);
-    PlannedTripsEndpoints plannedTripsService =
-      RetrofitBuilder.getRetrofitandRxJavaInstance().create(PlannedTripsEndpoints.class);
+    PlannedTripsServices plannedTripsService =
+      RetrofitBuilder.getRetrofitandRxJavaInstance().create(PlannedTripsServices.class);
     Single<PlannedTrips> source = plannedTripsService.getPlannedTrips(Constants.API_KEY,
                                                                       originLat,
                                                                       originLon,
@@ -190,8 +211,10 @@ public class GetDirectionSearchviewFragment extends Fragment {
       .subscribeWith(new DisposableSingleObserver<PlannedTrips>() {
         @Override
         public void onSuccess(PlannedTrips plannedTrips) {
+          progressBar.setVisibility(GONE);
           if (plannedTrips != null) {
             dataRetrievedCallback.onDataRetrieved(plannedTrips.getItineraries());
+            Log.d("Data Retrieved", " : Finished");
           }
         }
 
@@ -200,6 +223,7 @@ public class GetDirectionSearchviewFragment extends Fragment {
 
         }
       });
+    Log.d("Then log is called?", " It should be");
   }
 
   @Override
@@ -208,5 +232,11 @@ public class GetDirectionSearchviewFragment extends Fragment {
     if (disposable != null) {
       disposable.dispose();
     }
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+    unbinder.unbind();
   }
 }
