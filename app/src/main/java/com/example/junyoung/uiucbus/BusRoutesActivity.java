@@ -2,20 +2,28 @@ package com.example.junyoung.uiucbus;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.example.junyoung.uiucbus.adapters.BusRoutesAdapter;
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
-import com.example.junyoung.uiucbus.httpclient.endpoints.StopTimesEndPoints;
+import com.example.junyoung.uiucbus.httpclient.services.StopTimesServices;
 import com.example.junyoung.uiucbus.httpclient.pojos.StopTimes;
 import com.example.junyoung.uiucbus.httpclient.pojos.StopTimesByTrip;
 
@@ -32,11 +40,12 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
 
   private String busName;
   private String busColor;
-  private String busTripId;
   private String busStopName;
-  private String busShapeId;
-  private String busVehicleId;
-  private ArrayList<StopTimes> stopTimesList;
+  private String parentActivity;
+  private ArrayList<String> busTripIdList;
+  private ArrayList<String> busShapeIdList;
+  private ArrayList<String> busVehicleIdList;
+  private ArrayList<StopTimes> stopTimesList = null;
 
   private BusRoutesAdapter adapter;
   private LayoutManager layoutManager;
@@ -45,14 +54,18 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
   Toolbar busRoutesToolbar;
   @BindView(R.id.appbar_layout_bus_routes)
   AppBarLayout busRoutesAppBarLayout;
-  @BindView(R.id.recycler_view_bus_routes)
-  RecyclerView busRoutesRecyclerView;
-  @BindView(R.id.textview_bus_name_bus_routes)
-  TextView busNameTextView;
   @BindView(R.id.collapsing_toolbar_layout_bus_routes)
   CollapsingToolbarLayout collapsingToolbarLayout;
-  @BindView(R.id.imageButton)
-  ImageButton imageButton;
+
+  @BindView(R.id.textview_bus_routes)
+  TextView busRouteTextView;
+  @BindView(R.id.textview_bus_name_bus_routes)
+  TextView busNameTextView;
+
+  @BindView(R.id.recycler_view_bus_routes)
+  RecyclerView busRoutesRecyclerView;
+  @BindView(R.id.view_map_button_bus_routes)
+  ImageButton viewMapButton;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,16 +77,26 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
 
     busName = intent.getStringExtra(BusDeparturesActivity.EXTRA_BUSNAME);
     busColor = intent.getStringExtra(BusDeparturesActivity.EXTRA_BUSCOLOR);
-    busTripId = intent.getStringExtra(BusDeparturesActivity.EXTRA_TRIPID);
-    busShapeId = intent.getStringExtra(BusDeparturesActivity.EXTRA_SHAPEID);
     busStopName = intent.getStringExtra(BusStopsInMapActivity.EXTRA_STOPNAME);
-    busVehicleId = intent.getStringExtra(BusDeparturesActivity.EXTRA_VEHICLEID);
+    busTripIdList = intent.getStringArrayListExtra(BusDeparturesActivity.EXTRA_TRIPID);
+    busShapeIdList = intent.getStringArrayListExtra(BusDeparturesActivity.EXTRA_SHAPEID);
+    busVehicleIdList = intent.getStringArrayListExtra(BusDeparturesActivity.EXTRA_VEHICLEID);
+
+    parentActivity = intent.getStringExtra(MainActivity.EXTRA_ACTIVITYNAME);
 
     setSupportActionBar(busRoutesToolbar);
 
-    busNameTextView.setText(busName);
+    ActionBar actionBar = getSupportActionBar();
+    if (actionBar != null) {
+      actionBar.setDisplayHomeAsUpEnabled(true);
+      actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+    }
 
-    collapsingToolbarLayout.setTitleEnabled(false);
+    busNameTextView.setText(busName);
+    busRouteTextView.setText(busVehicleIdList.get(0));
+
+    collapsingToolbarLayout.setTitleEnabled(true);
+
     busRoutesAppBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
       boolean isShow = true;
       int scrollRange = -1;
@@ -84,40 +107,36 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
           scrollRange = appBarLayout.getTotalScrollRange();
         }
         if (scrollRange + verticalOffset == 0) {
-          busRoutesToolbar.setTitle(busName);
-          busRoutesToolbar.setTitleTextColor(getResources().getColor(R.color.white));
+          viewMapButton.setVisibility(View.INVISIBLE);
+          busNameTextView.setVisibility(View.INVISIBLE);
+          busRouteTextView.setVisibility(View.INVISIBLE);
+          collapsingToolbarLayout.setTitle(busName);
+          collapsingToolbarLayout.setCollapsedTitleTextColor(getResources().getColor(R.color.white));
           isShow = true;
         } else if (isShow) {
-          busRoutesToolbar.setTitle(" ");
+          viewMapButton.setVisibility(View.VISIBLE);
+          busNameTextView.setVisibility(View.VISIBLE);
+          busRouteTextView.setVisibility(View.VISIBLE);
+          collapsingToolbarLayout.setTitle(" ");
           isShow = false;
         }
       }
     });
 
-    stopTimesList = new ArrayList<>();
+    setRecyclerView();
 
-    busRoutesRecyclerView.setHasFixedSize(true);
-
-    layoutManager = new LinearLayoutManager(this);
-    busRoutesRecyclerView.setLayoutManager(layoutManager);
-
-    adapter = new BusRoutesAdapter(this, stopTimesList);
-    busRoutesRecyclerView.setAdapter(adapter);
-
-    busRoutesRecyclerView.addItemDecoration(new RouteItemDecoration(getApplicationContext(), busColor));
-
-    StopTimesEndPoints service =
-      RetrofitBuilder.getRetrofitInstance().create(StopTimesEndPoints.class);
+    StopTimesServices service =
+      RetrofitBuilder.getRetrofitInstance().create(StopTimesServices.class);
     Call<StopTimesByTrip> call = service.getStopTimesByTrip(
       Constants.API_KEY,
-      busTripId
+      busTripIdList.get(0)
     );
 
     call.enqueue(new Callback<StopTimesByTrip>() {
       @Override
-      public void onResponse(Call<StopTimesByTrip> call, Response<StopTimesByTrip> response) {
-        stopTimesList = response.body().getStopTimes();
-        if (stopTimesList != null) {
+      public void onResponse(@NonNull Call<StopTimesByTrip> call, @NonNull Response<StopTimesByTrip> response) {
+        if (response.isSuccessful()) {
+          stopTimesList = response.body().getStopTimes();
           adapter.updateStopTimesList(stopTimesList);
           for (int i = 0; i < stopTimesList.size(); i++) {
             if (stopTimesList.get(i).getStopPoint().getStopName().equals(busStopName)) {
@@ -128,6 +147,7 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
             }
           }
           busRoutesAppBarLayout.setExpanded(false);
+          Log.d("BusRoutesActivity", "First");
         }
       }
 
@@ -137,19 +157,57 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
       }
     });
 
-    imageButton.setOnClickListener(this);
+    Log.d("BusRoutesActivity", "Second");
+    viewMapButton.setOnClickListener(this);
   }
 
   @Override
   public void onClick(View view) {
     switch (view.getId()) {
-      case R.id.imageButton:
+      case R.id.view_map_button_bus_routes:
         Intent intent = new Intent(this, BusPathOnMapActivity.class);
-        intent.putExtra(EXTRA_SHAPEID, busShapeId);
         intent.putExtra(BusDeparturesActivity.EXTRA_BUSNAME, busName);
-        intent.putExtra(BusDeparturesActivity.EXTRA_VEHICLEID, busVehicleId);
+        intent.putStringArrayListExtra(EXTRA_SHAPEID, busShapeIdList);
+        intent.putStringArrayListExtra(BusDeparturesActivity.EXTRA_VEHICLEID, busVehicleIdList);
 
         startActivity(intent);
     }
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuInflater menuInflater = getMenuInflater();
+    menuInflater.inflate(R.menu.home_menu, menu);
+
+    return super.onCreateOptionsMenu(menu);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        NavUtils.navigateUpFromSameTask(this);
+        if (parentActivity.contentEquals(MainActivity.TAG)) {
+          Intent intent = new Intent(this, MainActivity.class);
+          NavUtils.navigateUpTo(this, intent);
+        }
+        return true;
+      case R.id.action_home:
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+    }
+
+    return super.onOptionsItemSelected(item);
+  }
+
+  public void setRecyclerView() {
+    stopTimesList = new ArrayList<>();
+    layoutManager = new LinearLayoutManager(this);
+    adapter = new BusRoutesAdapter(this, stopTimesList);
+
+    busRoutesRecyclerView.setAdapter(adapter);
+    busRoutesRecyclerView.setHasFixedSize(true);
+    busRoutesRecyclerView.setLayoutManager(layoutManager);
+    busRoutesRecyclerView.addItemDecoration(new RouteItemDecoration(getApplicationContext(), busColor));
   }
 }
