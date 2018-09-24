@@ -137,7 +137,7 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
       public void onResponse(@NonNull Call<StopTimesByTrip> call, @NonNull Response<StopTimesByTrip> response) {
         if (response.isSuccessful()) {
           stopTimesList = response.body().getStopTimes();
-          adapter.updateStopTimesList(stopTimesList);
+          adapter.updateStopTimesList(busStopName, stopTimesList);
           for (int i = 0; i < stopTimesList.size(); i++) {
             if (stopTimesList.get(i).getStopPoint().getStopName().equals(busStopName)) {
               if ((stopTimesList.size() - i) <= 7) {
@@ -147,7 +147,6 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
             }
           }
           busRoutesAppBarLayout.setExpanded(false);
-          Log.d("BusRoutesActivity", "First");
         }
       }
 
@@ -203,7 +202,7 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
   public void setRecyclerView() {
     stopTimesList = new ArrayList<>();
     layoutManager = new LinearLayoutManager(this);
-    adapter = new BusRoutesAdapter(this, stopTimesList);
+    adapter = new BusRoutesAdapter(this, busColor, stopTimesList);
 
     busRoutesRecyclerView.setAdapter(adapter);
     busRoutesRecyclerView.setHasFixedSize(true);
