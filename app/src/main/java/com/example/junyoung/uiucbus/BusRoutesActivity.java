@@ -156,7 +156,6 @@ public class BusRoutesActivity extends AppCompatActivity implements View.OnClick
       }
     });
 
-    Log.d("BusRoutesActivity", "Second");
     viewMapButton.setOnClickListener(this);
   }
 
