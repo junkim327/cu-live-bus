@@ -8,18 +8,18 @@ import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
-import com.example.junyoung.uiucbus.httpclient.endpoints.ShapeEndpoints;
-import com.example.junyoung.uiucbus.httpclient.endpoints.VehicleEndpoints;
+import com.example.junyoung.uiucbus.httpclient.services.ShapeServices;
+import com.example.junyoung.uiucbus.httpclient.services.VehicleServices;
 import com.example.junyoung.uiucbus.httpclient.pojos.Location;
 import com.example.junyoung.uiucbus.httpclient.pojos.Path;
 import com.example.junyoung.uiucbus.httpclient.pojos.PathAndVehicle;
 import com.example.junyoung.uiucbus.httpclient.pojos.Shape;
 import com.example.junyoung.uiucbus.httpclient.pojos.VehicleData;
-import com.google.android.gms.common.data.DataBufferObserver;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -42,21 +42,16 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.Subject;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class BusPathOnMapActivity extends AppCompatActivity implements
   OnMapReadyCallback {
   private static final String TAG = "BusPathOnMapActivity";
 
-  private String shapeId;
+  private ArrayList<String> shapeId = null;
   private String busName;
-  private String busVehicleId;
+  private ArrayList<String> busVehicleId = null;
   private Location busLocation;
   private ArrayList<Shape> shapeList;
 
@@ -77,23 +72,25 @@ public class BusPathOnMapActivity extends AppCompatActivity implements
 
     Intent intent = getIntent();
 
-    shapeId = intent.getStringExtra(BusRoutesActivity.EXTRA_SHAPEID);
+    shapeId = intent.getStringArrayListExtra(BusRoutesActivity.EXTRA_SHAPEID);
     busName = intent.getStringExtra(BusDeparturesActivity.EXTRA_BUSNAME);
-    busVehicleId = intent.getStringExtra(BusDeparturesActivity.EXTRA_VEHICLEID);
+    busVehicleId = intent.getStringArrayListExtra(BusDeparturesActivity.EXTRA_VEHICLEID);
+
+    Log.d(TAG, String.valueOf(busVehicleId));
 
     setSupportActionBar(busPathOnMapToolbar);
 
     setToolBar();
 
     Observable<Path> pathObservable = RetrofitBuilder.getRetrofitandRxJavaInstance()
-      .create(ShapeEndpoints.class)
-      .getShapeObservable(Constants.API_KEY, shapeId)
+      .create(ShapeServices.class)
+      .getShapeObservable(Constants.API_KEY, shapeId.get(0))
       .subscribeOn(Schedulers.newThread())
       .observeOn(AndroidSchedulers.mainThread());
 
     Observable<VehicleData> vehicleObservable = RetrofitBuilder.getRetrofitandRxJavaInstance()
-      .create(VehicleEndpoints.class)
-      .getVehicleObservable(Constants.API_KEY, busVehicleId)
+      .create(VehicleServices.class)
+      .getVehicleObservable(Constants.API_KEY, busVehicleId.get(0))
       .subscribeOn(Schedulers.newThread())
       .observeOn(AndroidSchedulers.mainThread());
 
@@ -144,7 +141,7 @@ public class BusPathOnMapActivity extends AppCompatActivity implements
 
       @Override
       public void onError(Throwable e) {
-
+        e.printStackTrace();
       }
 
       @Override
@@ -185,7 +182,7 @@ public class BusPathOnMapActivity extends AppCompatActivity implements
     polyline.setJointType(JointType.ROUND);
 
     map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-      new LatLng(busLocation.getLat(), busLocation.getLon()), 14.0f), 500, null
+      new LatLng(busLocation.getLat(), busLocation.getLon()), 16.0f), 500, null
     );
 
     busPathProgressBar.setVisibility(View.GONE);
