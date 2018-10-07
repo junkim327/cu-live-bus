@@ -4,8 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
-    android:background="@android:color/white"
+    android:layout_marginStart="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="8dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/rounded_corner"
+    android:backgroundTint="@color/white"
     android:elevation="4dp">
 
     <TextView
@@ -14,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:fontFamily="@font/lato_bold"
+        android:fontFamily="@font/oxygen_bold"
         android:text="TextView"
         android:textColor="@color/textMainColor"
         android:textSize="22sp"
@@ -28,6 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:fontFamily="@font/oxygen"
         android:text="TextView"
         app:layout_constraintBottom_toTopOf="@+id/recyclerview_trips_info_planned_trips_card"
         app:layout_constraintStart_toStartOf="@+id/textview_travel_time_planned_trips_card"
@@ -38,8 +43,8 @@
         android:id="@+id/recyclerview_trips_info_planned_trips_card"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -50,8 +55,8 @@
         android:id="@+id/textview_less_walking_planned_trips_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
         android:fontFamily="@font/lato"
         android:text="Less walking"
         android:textColor="@color/less_walking_text_color"
@@ -60,4 +65,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="85dp" />
+
 </android.support.constraint.ConstraintLayout>
