@@ -3,6 +3,7 @@ package com.example.junyoung.uiucbus.adapters;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,11 +43,13 @@ public class RecentDirectionAdapter
     }
   }
 
+  private boolean mExpanded;
   private Context mContext;
   private List<RouteInfo> mDirectionList;
   private RecyclerviewClickListener mRecyclerViewClickListener;
 
   public RecentDirectionAdapter(Context context, RecyclerviewClickListener listener) {
+    mExpanded = false;
     mContext = context;
     mRecyclerViewClickListener = listener;
   }
@@ -58,6 +61,11 @@ public class RecentDirectionAdapter
 
   public List<RouteInfo> getDirectionList() {
     return mDirectionList;
+  }
+
+  public void setExpanded(boolean expanded) {
+    mExpanded = expanded;
+    notifyDataSetChanged();
   }
 
   @NonNull
@@ -90,7 +98,11 @@ public class RecentDirectionAdapter
   @Override
   public int getItemCount() {
     if (mDirectionList != null) {
-      return mDirectionList.size();
+      if (!mExpanded && mDirectionList.size() > 7) {
+        return 7;
+      } else {
+        return mDirectionList.size();
+      }
     } else {
       return 0;
     }

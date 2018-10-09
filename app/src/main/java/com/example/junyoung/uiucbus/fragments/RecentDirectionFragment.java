@@ -16,34 +16,42 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapters.RecentDirectionAdapter;
 import com.example.junyoung.uiucbus.room.entity.RouteInfo;
-import com.example.junyoung.uiucbus.ui.DirectionViewModelFactory;
+import com.example.junyoung.uiucbus.ui.factory.DirectionViewModelFactory;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.viewmodel.RouteInfoViewModel;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static android.view.View.GONE;
 
 public class RecentDirectionFragment extends Fragment {
   private static final String TAG = RecentDirectionFragment.class.getSimpleName();
 
   private String mUid;
 
-  private RouteInfoViewModel mViewModel;
-  private DirectionViewModelFactory mViewModelFactory;
+  private Unbinder mUnbinder;
   private RecentDirectionAdapter mAdapter;
   private RecentDirectionClickListener onRecentDirectionCallback;
+  private RouteInfoViewModel mViewModel;
+  private DirectionViewModelFactory mViewModelFactory;
   private final CompositeDisposable mDisposable = new CompositeDisposable();
 
   @BindView(R.id.recyclerview_recent_direction)
   RecyclerView mRecyclerview;
+  @BindView(R.id.button_view_more_directions_recent_direction)
+  Button mViewMoreDirectionsButton;
 
   public interface RecentDirectionClickListener {
     void onRecentDirectionClick(RouteInfo directionInfo);
@@ -81,19 +89,19 @@ public class RecentDirectionFragment extends Fragment {
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.fragment_recent_direction, container, false);
-    ButterKnife.bind(this, view);
+    mUnbinder = ButterKnife.bind(this, view);
 
-    setRecyclerview();
+    setRecyclerView();
 
     return view;
   }
 
-  public void setRecyclerview() {
+  public void setRecyclerView() {
     mRecyclerview.setHasFixedSize(true);
+    mRecyclerview.setNestedScrollingEnabled(false);
 
     LayoutManager layoutManager = new LinearLayoutManager(getContext());
     mRecyclerview.setLayoutManager(layoutManager);
-
 
     DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(
       mRecyclerview.getContext(),
@@ -137,10 +145,20 @@ public class RecentDirectionFragment extends Fragment {
               Log.d(TAG, "Total Route Info: " + routeInfos.size());
               Log.d(TAG, "UID: " + mUid);
               mAdapter.setDirectionList(routeInfos);
+              if (routeInfos.size() > 7) {
+                mViewMoreDirectionsButton.setVisibility(View.VISIBLE);
+              }
             }
           },
           throwable -> Log.e(TAG, "Unable to update recent directions", throwable)));
     }
+  }
+
+  @OnClick(R.id.button_view_more_directions_recent_direction)
+  public void expandRecentDirectionList() {
+    mViewMoreDirectionsButton.setClickable(false);
+    mViewMoreDirectionsButton.setVisibility(GONE);
+    mAdapter.setExpanded(true);
   }
 
   @Override
@@ -148,5 +166,12 @@ public class RecentDirectionFragment extends Fragment {
     super.onStop();
 
     mDisposable.clear();
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+
+    mUnbinder.unbind();
   }
 }
