@@ -1,12 +1,16 @@
 package com.example.junyoung.uiucbus;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -19,11 +23,14 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.example.junyoung.uiucbus.adapters.BusStopInfoWindowAdapter;
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
-import com.example.junyoung.uiucbus.httpclient.endpoints.BusStopsEndpoints;
+import com.example.junyoung.uiucbus.httpclient.services.BusStopsServices;
 import com.example.junyoung.uiucbus.httpclient.pojos.BusStops;
 import com.example.junyoung.uiucbus.httpclient.pojos.Stop;
 import com.example.junyoung.uiucbus.httpclient.pojos.StopPoint;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -33,6 +40,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.GoogleMap.OnCameraIdleListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 
@@ -62,6 +70,8 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
   private ArrayList<Stop> busStopList;
 
   private GoogleMap map;
+  private BottomSheetBehavior bottomSheetBehavior;
+  private FusedLocationProviderClient mFusedLocationClient;
 
   @BindView(R.id.toolbar_bus_stops_in_map)
   Toolbar busStopsInMapToolBar;
@@ -82,10 +92,40 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
     setContentView(R.layout.activity_bus_stops_in_map);
     ButterKnife.bind(this);
 
-    Intent intent = getIntent();
-    userLatitude = intent.getStringExtra("latitude");
-    userLongitude = intent.getStringExtra("longitude");
+    setToolbar();
 
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+      != PackageManager.PERMISSION_GRANTED) {
+      userLatitude = getString(R.string.illini_union_latitude);
+      userLongitude = getString(R.string.illini_union_longitude);
+      getNearbyStops();
+    } else {
+      mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+      mFusedLocationClient.getLastLocation()
+        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+          @Override
+          public void onSuccess(Location location) {
+            if (location != null) {
+              userLatitude = String.valueOf(location.getLatitude());
+              userLongitude = String.valueOf(location.getLongitude());
+            } else {
+              userLatitude = getString(R.string.illini_union_latitude);
+              userLongitude = getString(R.string.illini_union_longitude);
+            }
+            getNearbyStops();
+          }
+        });
+    }
+
+    bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+    // Log.d(TAG, userLatitude + " " + userLongitude);
+
+    busDepartureButton.setOnClickListener(this);
+  }
+
+  private void setToolbar() {
     setSupportActionBar(busStopsInMapToolBar);
 
     busStopsInMapToolBar.setTitleTextColor(Color.WHITE);
@@ -96,16 +136,11 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
       actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
       actionBar.setTitle("Nearby Stops");
     }
+  }
 
-    BottomSheetBehavior bottomSheetBehavior =
-      BottomSheetBehavior.from(bottomSheet);
-
-    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-
-    // Log.d(TAG, userLatitude + " " + userLongitude);
-
-    BusStopsEndpoints service =
-      RetrofitBuilder.getRetrofitInstance().create(BusStopsEndpoints.class);
+  private void getNearbyStops() {
+    BusStopsServices service =
+      RetrofitBuilder.getRetrofitInstance().create(BusStopsServices.class);
     Call<BusStops> call = service.getNearestStops(
       Constants.API_KEY,
       userLatitude,
@@ -134,8 +169,6 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
 
       }
     });
-
-    busDepartureButton.setOnClickListener(this);
   }
 
   @Override
@@ -148,6 +181,9 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
     createUserMarker();
     // Add markers at bus stop locations.
     createBusStopMarkers(busStopList);
+
+    BusStopInfoWindowAdapter adapter = new BusStopInfoWindowAdapter(this);
+    map.setInfoWindowAdapter(adapter);
 
     map.animateCamera(CameraUpdateFactory.newLatLngZoom(
       new LatLng(
@@ -167,8 +203,8 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
   public void onCameraIdle() {
     LatLng cameraCurrentLatLng = map.getCameraPosition().target;
 
-    BusStopsEndpoints service =
-      RetrofitBuilder.getRetrofitInstance().create(BusStopsEndpoints.class);
+    BusStopsServices service =
+      RetrofitBuilder.getRetrofitInstance().create(BusStopsServices.class);
     Call<BusStops> call = service.getNearestStops(
       Constants.API_KEY,
       String.valueOf(cameraCurrentLatLng.latitude),
@@ -192,7 +228,22 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
 
   @Override
   protected void onResume() {
+    Log.d(TAG, "onResume has started");
     super.onResume();
+
+    bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+      @Override
+      public void onStateChanged(@NonNull View bottomSheet, int newState) {
+
+      }
+
+      @Override
+      public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+        if (slideOffset == -1) {
+          map.setPadding(0, 0, 0, -bottomSheet.getHeight());
+        }
+      }
+    });
   }
 
   private void createUserMarker() {
@@ -215,7 +266,7 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
         Marker marker = map.addMarker(new MarkerOptions()
           .position(markerPosition)
           .title(stopPoints.get(j).getStopName())
-          .icon(BitmapDescriptorFactory.fromResource(R.drawable.google_maps_custom_marker))
+          .icon(BitmapDescriptorFactory.fromResource(R.drawable.google_map_custom_marker))
         );
 
         marker.setTag(stopPoints.get(j));
@@ -226,7 +277,9 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
   @Override
   public boolean onMarkerClick(final Marker marker) {
     if (marker.getId().equals(userMarkerId)) {
-      return false;
+      marker.hideInfoWindow();
+
+      return true;
     }
 
     StopPoint stopPointInfo = (StopPoint) marker.getTag();
@@ -240,11 +293,8 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
     busStopNameTextView.setText(userSelectedBusStopName);
     busStopCodeTextView.setText(userSelectedBusStopCode);
 
-    // Log.d(TAG, stopPointInfo.getStopId());
-    BottomSheetBehavior bottomSheetBehavior =
-      BottomSheetBehavior.from(bottomSheet);
-
     bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+    map.setPadding(0, 0, 0, bottomSheet.getHeight());
 
     return false;
   }
@@ -253,14 +303,14 @@ public class BusStopsInMapActivity extends AppCompatActivity implements
   public void onInfoWindowClick(final Marker marker) {
     StopPoint stopPointInfo = (StopPoint) marker.getTag();
 
-    Intent intent = new Intent(this, BusDeparturesActivity.class);
     if (stopPointInfo != null) {
+      Intent intent = new Intent(this, BusDeparturesActivity.class);
       intent.putExtra(EXTRA_CODE, stopPointInfo.getCode());
       intent.putExtra(EXTRA_STOPID, stopPointInfo.getStopId());
       intent.putExtra(EXTRA_STOPNAME, stopPointInfo.getStopName());
       intent.putExtra(MainActivity.EXTRA_ACTIVITYNAME, TAG);
+      startActivity(intent);
     }
-    startActivity(intent);
   }
 
   @Override
