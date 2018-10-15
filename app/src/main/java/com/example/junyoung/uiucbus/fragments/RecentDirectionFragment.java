@@ -4,6 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Rect;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,7 +18,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
+import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapters.RecentDirectionAdapter;
@@ -25,6 +28,7 @@ import com.example.junyoung.uiucbus.room.entity.RouteInfo;
 import com.example.junyoung.uiucbus.ui.factory.DirectionViewModelFactory;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.viewmodel.RouteInfoViewModel;
+import com.example.junyoung.uiucbus.utils.UtilConnection;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,6 +39,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 
 public class RecentDirectionFragment extends Fragment {
   private static final String TAG = RecentDirectionFragment.class.getSimpleName();
@@ -43,17 +48,21 @@ public class RecentDirectionFragment extends Fragment {
 
   private Unbinder mUnbinder;
   private RecentDirectionAdapter mAdapter;
-  private RecentDirectionClickListener onRecentDirectionCallback;
+  private ConnectivityManager mConnectivityManager;
+  private OnInternetConnectedListener mInternetConnectedCallback;
+  private OnRecentDirectionClickedkListener mRecentDirectionCallback;
   private RouteInfoViewModel mViewModel;
   private DirectionViewModelFactory mViewModelFactory;
   private final CompositeDisposable mDisposable = new CompositeDisposable();
 
+  @BindView(R.id.text_header_recent_direction)
+  TextView mHeaderTextView;
   @BindView(R.id.recyclerview_recent_direction)
   RecyclerView mRecyclerview;
   @BindView(R.id.button_view_more_directions_recent_direction)
-  Button mViewMoreDirectionsButton;
+  Button mViewMoreDirectionButton;
 
-  public interface RecentDirectionClickListener {
+  public interface OnRecentDirectionClickedkListener {
     void onRecentDirectionClick(RouteInfo directionInfo);
   }
 
@@ -62,7 +71,14 @@ public class RecentDirectionFragment extends Fragment {
     super.onAttach(context);
 
     try {
-      onRecentDirectionCallback = (RecentDirectionClickListener) context;
+      mInternetConnectedCallback = (OnInternetConnectedListener) context;
+    } catch (ClassCastException e) {
+      throw new ClassCastException(context.toString()
+        + " must implement OnInternetConnectedListener.");
+    }
+
+    try {
+      mRecentDirectionCallback = (OnRecentDirectionClickedkListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
         + " must implement OnRecentDirectionClickListener."
@@ -74,12 +90,19 @@ public class RecentDirectionFragment extends Fragment {
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    Log.d(TAG, "onCreate is called");
+
+    mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
+      Context.CONNECTIVITY_SERVICE
+    );
+
     SharedPreferences sharedPref = getActivity().getSharedPreferences(
       getString(R.string.preference_file_key), Context.MODE_PRIVATE
     );
 
     // Get uid from shared preferences. If there is no saved uid, then return null.
     mUid = sharedPref.getString(getString(R.string.saved_uid), null);
+    Log.d(TAG, "you think this line is called?");
 
     mViewModelFactory = Injection.provideDirectionViewModelFactory(getContext());
     mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(RouteInfoViewModel.class);
@@ -88,8 +111,14 @@ public class RecentDirectionFragment extends Fragment {
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    if (mConnectivityManager != null) {
+      UtilConnection.isInternetConnected(mConnectivityManager, mInternetConnectedCallback, true);
+    }
+
     View view = inflater.inflate(R.layout.fragment_recent_direction, container, false);
     mUnbinder = ButterKnife.bind(this, view);
+
+    Log.d(TAG, "onCreateView is called");
 
     setRecyclerView();
 
@@ -120,9 +149,16 @@ public class RecentDirectionFragment extends Fragment {
     mRecyclerview.addItemDecoration(dividerItemDecoration);
 
     RecyclerviewClickListener listener = (view, position) -> {
-      if (mAdapter != null) {
+      boolean isConnected = true;
+      if (mConnectivityManager != null) {
+        isConnected = UtilConnection.isInternetConnected(mConnectivityManager,
+          mInternetConnectedCallback,
+          true);
+      }
+
+      if (mAdapter != null && isConnected) {
         RouteInfo selectedDirectionInfo = mAdapter.getDirectionList().get(position);
-        onRecentDirectionCallback.onRecentDirectionClick(selectedDirectionInfo);
+        mRecentDirectionCallback.onRecentDirectionClick(selectedDirectionInfo);
       }
     };
 
@@ -145,19 +181,32 @@ public class RecentDirectionFragment extends Fragment {
               Log.d(TAG, "Total Route Info: " + routeInfos.size());
               Log.d(TAG, "UID: " + mUid);
               mAdapter.setDirectionList(routeInfos);
+              if (routeInfos.size() > 0) {
+                mHeaderTextView.setVisibility(VISIBLE);
+              }
               if (routeInfos.size() > 7) {
-                mViewMoreDirectionsButton.setVisibility(View.VISIBLE);
+                mViewMoreDirectionButton.setVisibility(VISIBLE);
               }
             }
           },
-          throwable -> Log.e(TAG, "Unable to update recent directions", throwable)));
+          throwable -> {
+          Log.e(TAG, "Unable to update recent directions", throwable);
+        }));
+    }
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    if (mConnectivityManager != null) {
+      UtilConnection.isInternetConnected(mConnectivityManager, mInternetConnectedCallback, true);
     }
   }
 
   @OnClick(R.id.button_view_more_directions_recent_direction)
   public void expandRecentDirectionList() {
-    mViewMoreDirectionsButton.setClickable(false);
-    mViewMoreDirectionsButton.setVisibility(GONE);
+    mViewMoreDirectionButton.setClickable(false);
+    mViewMoreDirectionButton.setVisibility(GONE);
     mAdapter.setExpanded(true);
   }
 

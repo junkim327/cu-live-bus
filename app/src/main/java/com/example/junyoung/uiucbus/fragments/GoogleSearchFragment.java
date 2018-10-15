@@ -4,6 +4,7 @@ import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,7 +18,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
+import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapters.RecentPlaceAdapter;
@@ -25,6 +28,7 @@ import com.example.junyoung.uiucbus.room.entity.UserPlace;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.PlaceViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.PlaceViewModel;
+import com.example.junyoung.uiucbus.utils.UtilConnection;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -39,9 +43,12 @@ import java.util.UUID;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
+
+import static android.view.View.VISIBLE;
 
 public class GoogleSearchFragment extends Fragment {
   private static final int RESULT_OK = -1;
@@ -52,13 +59,18 @@ public class GoogleSearchFragment extends Fragment {
   private String mUid;
   private String hint;
 
+  private Unbinder mUnbinder;
   private PlaceViewModel mViewModel;
   private PlaceViewModelFactory mViewModelFactory;
+  private ConnectivityManager mConnectivityManager;
   private RecentPlaceAdapter mAdapter;
   private LatLngBounds champaignUrbanaLatLngBounds;
+  private OnInternetConnectedListener mInternetConnectedCallback;
   private OnActivityResultListener onActivityResultCallback;
   private final CompositeDisposable mDisposable = new CompositeDisposable();
 
+  @BindView(R.id.text_header_recent_place)
+  TextView mHeaderTextView;
   @BindView(R.id.button_back_google_search)
   ImageButton mBackButton;
   @BindView(R.id.button_choose_on_map_google_search)
@@ -86,6 +98,13 @@ public class GoogleSearchFragment extends Fragment {
     super.onAttach(context);
 
     try {
+      mInternetConnectedCallback = (OnInternetConnectedListener) context;
+    } catch (ClassCastException e) {
+      throw new ClassCastException(context.toString()
+        + " must implement OnRecentDirectionClickListener.");
+    }
+
+    try {
       onActivityResultCallback = (OnActivityResultListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
@@ -97,6 +116,11 @@ public class GoogleSearchFragment extends Fragment {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
+      Context.CONNECTIVITY_SERVICE
+    );
+
     if (getArguments() != null) {
       hint = getArguments().getString(EXTRA_HINT);
     }
@@ -123,8 +147,12 @@ public class GoogleSearchFragment extends Fragment {
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    if (mConnectivityManager != null) {
+      UtilConnection.isInternetConnected(mConnectivityManager, mInternetConnectedCallback, false);
+    }
+
     View view = inflater.inflate(R.layout.fragment_google_search, container, false);
-    ButterKnife.bind(this, view);
+    mUnbinder = ButterKnife.bind(this, view);
 
     googleSearchEditText.setHint(hint);
     googleSearchEditText.setFocusable(false);
@@ -162,8 +190,17 @@ public class GoogleSearchFragment extends Fragment {
       .subscribe(userPlaces -> {
         if (userPlaces != null && userPlaces.size() != 0) {
           mAdapter.setPlaceList(userPlaces);
+          mHeaderTextView.setVisibility(VISIBLE);
         }
       }, throwable -> Log.e(TAG, "Unable to update recent places", throwable)));
+    }
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    if (mConnectivityManager != null) {
+      UtilConnection.isInternetConnected(mConnectivityManager, mInternetConnectedCallback, false);
     }
   }
 
@@ -176,7 +213,9 @@ public class GoogleSearchFragment extends Fragment {
 
   @OnClick(R.id.button_back_google_search)
   public void backToPreviousStack() {
-    getFragmentManager().popBackStackImmediate();
+    if (getFragmentManager() != null) {
+      getFragmentManager().popBackStackImmediate();
+    }
   }
 
   @OnClick(R.id.edittext_google_search)
@@ -268,5 +307,12 @@ public class GoogleSearchFragment extends Fragment {
     .observeOn(AndroidSchedulers.mainThread())
     .subscribe(() -> Log.i(TAG, "Place is successfully stored in the database."),
       throwable -> Log.e(TAG, "Unable to insert place :(", throwable)));
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+
+    mUnbinder.unbind();
   }
 }

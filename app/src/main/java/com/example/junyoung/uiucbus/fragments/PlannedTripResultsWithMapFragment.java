@@ -153,11 +153,7 @@ public class PlannedTripResultsWithMapFragment extends Fragment {
     View view = inflater.inflate(R.layout.fragment_planned_trips_result_with_map, container, false);
     unbinder = ButterKnife.bind(this, view);
 
-    ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-    toolbar.setTitleTextColor(Color.WHITE);
-    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-    actionBar.setTitle("Direction");
-
+    setToolbar();
     setHasOptionsMenu(true);
 
     SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -248,11 +244,31 @@ public class PlannedTripResultsWithMapFragment extends Fragment {
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
+      case android.R.id.home:
+        if (getFragmentManager() != null) {
+          getFragmentManager().popBackStackImmediate();
+        }
+        return true;
       case R.id.action_home:
         Intent intent = new Intent(getContext(), MainActivity.class);
         startActivity(intent);
+        return true;
+      default:
+        return super.onOptionsItemSelected(item);
     }
-    return super.onOptionsItemSelected(item);
+  }
+
+  private void setToolbar() {
+    if (getActivity() != null) {
+      ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+    }
+    toolbar.setTitleTextColor(Color.WHITE);
+    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+    if (actionBar != null) {
+      actionBar.setTitle("Direction");
+      actionBar.setDisplayHomeAsUpEnabled(true);
+      actionBar.setHomeAsUpIndicator(R.drawable.ic_left_arrow_white);
+    }
   }
 
   private void setBusInfoRecyclerView() {
@@ -278,6 +294,7 @@ public class PlannedTripResultsWithMapFragment extends Fragment {
         startPointName,
         destinationName);
       tripInfoRecyclerView.setAdapter(adapter);
+      tripInfoRecyclerView.setNestedScrollingEnabled(false);
     }
   }
 
@@ -321,5 +338,12 @@ public class PlannedTripResultsWithMapFragment extends Fragment {
     }
 
     return new LatLngBounds(startPointLatLng, endPointLatLng);
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+
+    unbinder.unbind();
   }
 }
