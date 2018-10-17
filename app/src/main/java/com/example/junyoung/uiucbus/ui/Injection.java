@@ -5,15 +5,19 @@ import android.content.Context;
 import com.example.junyoung.uiucbus.PlaceDataSource;
 import com.example.junyoung.uiucbus.RouteInfoDataSource;
 import com.example.junyoung.uiucbus.UserSavedBusStopDataSource;
+import com.example.junyoung.uiucbus.UserSearchedBusStopDataSource;
 import com.example.junyoung.uiucbus.room.database.PlaceDatabase;
 import com.example.junyoung.uiucbus.room.database.RouteInfoDatabase;
 import com.example.junyoung.uiucbus.room.database.UserSavedBusStopDatabase;
+import com.example.junyoung.uiucbus.room.database.UserSearchedBusStopDatabase;
 import com.example.junyoung.uiucbus.room.datasource.LocalPlaceDataSource;
 import com.example.junyoung.uiucbus.room.datasource.LocalRouteInfoDataSource;
 import com.example.junyoung.uiucbus.room.datasource.LocalUserSavedBusStopDataSource;
+import com.example.junyoung.uiucbus.room.datasource.LocalUserSearchedBusStopDataSource;
 import com.example.junyoung.uiucbus.ui.factory.DirectionViewModelFactory;
 import com.example.junyoung.uiucbus.ui.factory.PlaceViewModelFactory;
 import com.example.junyoung.uiucbus.ui.factory.UserSavedBusStopViewModelFactory;
+import com.example.junyoung.uiucbus.ui.factory.UserSearchedBusStopViewModelFactory;
 
 public class Injection {
   public static RouteInfoDataSource provideRouteInfoDataSource(Context context) {
@@ -45,5 +49,18 @@ public class Injection {
   public static UserSavedBusStopViewModelFactory provideUserSavedBusStopViewModelFactory(Context context) {
     UserSavedBusStopDataSource dataSource = provideUserSavedBusStopDataSource(context);
     return new UserSavedBusStopViewModelFactory(dataSource);
+  }
+
+  public static UserSearchedBusStopDataSource provideUserSearchedBusStopDataSource(Context context) {
+    UserSearchedBusStopDatabase database =
+      UserSearchedBusStopDatabase.getUserSearchedBusStopDatabase(context);
+
+    return new LocalUserSearchedBusStopDataSource(database.getUserSearchedBusStopDao());
+  }
+
+  public static UserSearchedBusStopViewModelFactory provideUserSearchedBusStopViewModelFactory(Context context) {
+    UserSearchedBusStopDataSource dataSource = provideUserSearchedBusStopDataSource(context);
+
+    return new UserSearchedBusStopViewModelFactory(dataSource);
   }
 }
