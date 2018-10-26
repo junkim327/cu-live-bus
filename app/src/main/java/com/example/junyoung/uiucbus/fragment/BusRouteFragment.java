@@ -1,6 +1,5 @@
 package com.example.junyoung.uiucbus.fragment;
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -15,34 +14,48 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.junyoung.uiucbus.OnHomeItemClickedListener;
 import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.adapter.BusRoutesAdapter;
+import com.example.junyoung.uiucbus.adapter.BusRouteAdapter;
 import com.example.junyoung.uiucbus.httpclient.pojos.SortedDeparture;
-import com.example.junyoung.uiucbus.httpclient.pojos.StopTimes;
 import com.example.junyoung.uiucbus.ui.viewmodel.BusRouteViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedDepartureViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SharedStopPointViewModel;
 import com.example.junyoung.uiucbus.utils.UtilConnection;
-
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 public class BusRouteFragment extends Fragment {
+  private static final String TAG = BusRouteFragment.class.getSimpleName();
+
   private boolean mIsInternetConnected;
 
+  private MenuItem mMapMenuItem;
+
   private Unbinder mUnbinder;
-  private BusRoutesAdapter mAdapter;
+  private BusRouteAdapter mAdapter;
   private ConnectivityManager mConnectivityManager;
+
+  // ViewModels
   private BusRouteViewModel mBusRouteViewModel;
+  private SharedStopPointViewModel mSharedStopPointViewModel;
   private SharedDepartureViewModel mSharedDepartureViewModel;
+
+  // Callbacks
+  private OnMapItemClickedListener mMapItemClickedCallback;
+  private OnHomeItemClickedListener mHomeItemClickedCallback;
   private OnInternetConnectedListener mInternetConnectedCallback;
 
   @BindView(R.id.toolbar_bus_routes)
@@ -58,9 +71,15 @@ public class BusRouteFragment extends Fragment {
   @BindView(R.id.recycler_view_bus_routes)
   RecyclerView mRecyclerView;
 
+  public interface OnMapItemClickedListener {
+    void onMapItemClicked();
+  }
+
   @Override
   public void onAttach(Context context) {
     super.onAttach(context);
+
+    Log.d(TAG, "onAttach has called");
 
     try {
       mInternetConnectedCallback = (OnInternetConnectedListener) context;
@@ -68,11 +87,27 @@ public class BusRouteFragment extends Fragment {
       throw new ClassCastException(context.toString()
         + " must implement OnInternetConnectedListener.");
     }
+
+    try {
+      mHomeItemClickedCallback = (OnHomeItemClickedListener) context;
+    } catch (ClassCastException e) {
+      throw new ClassCastException(context.toString()
+        + " must implement OnHomeItemClickedListener.");
+    }
+
+    try {
+      mMapItemClickedCallback = (OnMapItemClickedListener) context;
+    } catch (ClassCastException e) {
+      throw new ClassCastException(context.toString()
+        + " must implement OnMapItemClickedListener.");
+    }
   }
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    Log.d(TAG, "onCreate has called");
 
     mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
       Context.CONNECTIVITY_SERVICE
@@ -88,10 +123,15 @@ public class BusRouteFragment extends Fragment {
         mInternetConnectedCallback, false);
     }
 
+    Log.d(TAG, "onCreateView has called");
+
     View view = null;
     if (mIsInternetConnected) {
       view = inflater.inflate(R.layout.activity_bus_routes, container, false);
       mUnbinder = ButterKnife.bind(this, view);
+
+      setToolbar();
+      setRecyclerView();
     }
 
     return view;
@@ -102,6 +142,7 @@ public class BusRouteFragment extends Fragment {
 
     ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
     if (actionBar != null) {
+      setHasOptionsMenu(true);
       actionBar.setDisplayHomeAsUpEnabled(true);
       actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
     }
@@ -113,7 +154,7 @@ public class BusRouteFragment extends Fragment {
     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
     mRecyclerView.setLayoutManager(layoutManager);
 
-    mAdapter = new BusRoutesAdapter(getContext());
+    mAdapter = new BusRouteAdapter(getContext());
     mRecyclerView.setAdapter(mAdapter);
   }
 
@@ -133,6 +174,9 @@ public class BusRouteFragment extends Fragment {
           scrollRange = appBarLayout.getTotalScrollRange();
         }
         if (scrollRange + verticalOffset == 0) {
+          if (mMapMenuItem != null) {
+            mMapMenuItem.setVisible(true);
+          }
           mCollapsingToolbarLayout.setTitle(busName);
           mCollapsingToolbarLayout.setCollapsedTitleTextColor(
             getResources().getColor(R.color.white)
@@ -141,6 +185,9 @@ public class BusRouteFragment extends Fragment {
         } else if (isShow) {
           // TODO: store empty string to string resource
           mCollapsingToolbarLayout.setTitle(" ");
+          if (mMapMenuItem != null) {
+            mMapMenuItem.setVisible(false);
+          }
           isShow = false;
         }
       }
@@ -151,7 +198,13 @@ public class BusRouteFragment extends Fragment {
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
+    Log.d(TAG, "onActivityCreated has called");
+
     mBusRouteViewModel = ViewModelProviders.of(this).get(BusRouteViewModel.class);
+
+    mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedStopPointViewModel.class);
+
     mSharedDepartureViewModel = ViewModelProviders.of(getActivity())
       .get(SharedDepartureViewModel.class);
     SortedDeparture departure = mSharedDepartureViewModel.getDeparture().getValue();
@@ -160,18 +213,59 @@ public class BusRouteFragment extends Fragment {
       mBusRouteViewModel.init(departure.getTripList().get(0).getTripId());
     }
 
-    mBusRouteViewModel.getRouteList().observe(this, new Observer<List<StopTimes>>() {
-      @Override
-      public void onChanged(@Nullable List<StopTimes> routeList) {
-        if (routeList != null && departure != null) {
-          mAdapter.updateStopTimesList(
-            departure.getRouteList().get(0).getRouteColor(),
-            departure.getHeadSign(),
-            routeList
-          );
+    mBusRouteViewModel.getRouteList().observe(this, routeList -> {
+      if (routeList != null && departure != null) {
+        String busStopName = getResources().getString(R.string.empty_string);
+        if (mSharedStopPointViewModel.getSelectedStopPoint().getValue() != null) {
+          busStopName = mSharedStopPointViewModel.getSelectedStopPoint().getValue().getStopName();
         }
+        mAdapter.updateStopTimesList(
+          departure.getRouteList().get(0).getRouteColor(),
+          busStopName,
+          routeList
+        );
+
+        int pos = 0;
+        for (int i = 0; i < routeList.size(); i++) {
+          if (routeList.get(i).getStopPoint().getStopName().contentEquals(busStopName)) {
+            pos = i;
+          }
+        }
+        mRecyclerView.scrollToPosition(pos);
+        mAppBarLayout.setExpanded(false);
       }
     });
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    Log.d(TAG, "onResume has called");
+  }
+
+  @Override
+  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+    super.onCreateOptionsMenu(menu, inflater);
+    inflater.inflate(R.menu.bus_route_menu, menu);
+    if (menu != null) {
+      mMapMenuItem = menu.findItem(R.id.action_map_bus_route);
+    }
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        return true;
+      case R.id.action_map_bus_route:
+        mMapItemClickedCallback.onMapItemClicked();
+        return true;
+      case R.id.action_home_bus_route:
+        mHomeItemClickedCallback.onHomeItemClicked();
+        return true;
+      default:
+        return super.onOptionsItemSelected(item);
+    }
   }
 
   @Override
