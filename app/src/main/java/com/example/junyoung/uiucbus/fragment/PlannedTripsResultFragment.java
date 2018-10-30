@@ -1,4 +1,4 @@
-package com.example.junyoung.uiucbus.fragments;
+package com.example.junyoung.uiucbus.fragment;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
@@ -19,11 +19,11 @@ import android.widget.TextView;
 import com.example.junyoung.uiucbus.CustomLinearLayoutManager;
 import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
-import com.example.junyoung.uiucbus.adapters.PlannedTripResultsAdapter;
+import com.example.junyoung.uiucbus.adapter.PlannedTripResultsAdapter;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.httpclient.pojos.Itinerary;
 import com.example.junyoung.uiucbus.httpclient.pojos.Leg;
-import com.example.junyoung.uiucbus.utils.UtilConnection;
+import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import java.util.ArrayList;
 

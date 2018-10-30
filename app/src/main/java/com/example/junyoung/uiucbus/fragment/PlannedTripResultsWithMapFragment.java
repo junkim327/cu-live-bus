@@ -1,4 +1,4 @@
-package com.example.junyoung.uiucbus.fragments;
+package com.example.junyoung.uiucbus.fragment;
 
 import android.content.Intent;
 import android.graphics.Color;
@@ -25,19 +25,16 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
-import com.example.junyoung.uiucbus.DeviceDimensionsHelper;
 import com.example.junyoung.uiucbus.MainActivity;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.httpclient.pojos.Walk;
-import com.example.junyoung.uiucbus.utils.TimeFormatter;
-import com.example.junyoung.uiucbus.adapters.BusInfoInBottomSheetAdapter;
-import com.example.junyoung.uiucbus.adapters.TripInfoInBottomSheetAdapter;
+import com.example.junyoung.uiucbus.util.TimeFormatter;
+import com.example.junyoung.uiucbus.adapter.BusInfoInBottomSheetAdapter;
+import com.example.junyoung.uiucbus.adapter.TripInfoInBottomSheetAdapter;
 import com.example.junyoung.uiucbus.httpclient.pojos.Itinerary;
 import com.example.junyoung.uiucbus.httpclient.pojos.Leg;
 import com.example.junyoung.uiucbus.httpclient.pojos.Path;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.JointType;

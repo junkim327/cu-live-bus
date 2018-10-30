@@ -3,6 +3,8 @@ package com.example.junyoung.uiucbus.fragment;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,6 +13,7 @@ import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,13 +24,17 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.example.junyoung.uiucbus.OnHomeItemClickedListener;
 import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
@@ -40,24 +47,30 @@ import com.example.junyoung.uiucbus.ui.viewmodel.BusDeparturesViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedDepartureViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedStopPointViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.UserSavedBusStopViewModel;
-import com.example.junyoung.uiucbus.utils.UtilConnection;
+import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 
-import static android.view.View.GONE;
+import static android.view.View.INVISIBLE;
 
-public class BusDeparturesFragment extends Fragment {
+public class BusDeparturesFragment extends Fragment
+  implements ToggleButton.OnCheckedChangeListener {
   private static final int MAX_NUM_SAVED_STOPS = 3;
   private static final String TAG = BusDeparturesFragment.class.getSimpleName();
 
+  private int mNumSavedBusStops;
   private int mSize = 0;
   private String mUid;
 
   private Unbinder mUnbinder;
+  private StopPoint mStopPoint;
   private BusDeparturesAdapter mAdapter;
   private ConnectivityManager mConnectivityManager;
   private OnHomeItemClickedListener mHomeItemClickedCallback;
@@ -68,6 +81,7 @@ public class BusDeparturesFragment extends Fragment {
   private SharedStopPointViewModel mSharedStopPointViewModel;
   private UserSavedBusStopViewModel mUserSavedBusStopViewModel;
   private UserSavedBusStopViewModelFactory mUserSavedBusStopViewModelFactory;
+  private CompositeDisposable mDisposable = new CompositeDisposable();
 
   @BindView(R.id.toolbar_bus_departures)
   Toolbar mToolbar;
@@ -86,13 +100,9 @@ public class BusDeparturesFragment extends Fragment {
   @BindView(R.id.floating_action_button_bus_departures)
   FloatingActionButton floatingActionButton;
   @BindView(R.id.toggle_button_bus_departures)
-  ToggleButton addFavoriteButton;
+  ToggleButton mAddFavoriteButton;
   @BindView(R.id.image_unselected_button_bus_departures)
   ImageView unselectedButtonImageView;
-
-  public interface OnHomeItemClickedListener {
-    void onHomeItemClicked();
-  }
 
   public interface OnDepartureClickedListener {
     void onDepartureClicked();
@@ -135,12 +145,15 @@ public class BusDeparturesFragment extends Fragment {
     SharedPreferences sharedPref = getActivity().getSharedPreferences(
       getString(R.string.preference_file_key), Context.MODE_PRIVATE
     );
-    mUid = sharedPref.getString(getString(R.string.saved_uid), null);
 
-    mUserSavedBusStopViewModelFactory =
-      Injection.provideUserSavedBusStopViewModelFactory(getContext());
-    mUserSavedBusStopViewModel = ViewModelProviders.of(this, mUserSavedBusStopViewModelFactory)
-      .get(UserSavedBusStopViewModel.class);
+    mUid = sharedPref.getString(getString(R.string.saved_uid), null);
+    mNumSavedBusStops = sharedPref.getInt(getResources().getString(R.string.saved_bus_stops), 0);
+
+    Log.d(TAG, "Num saved bus stops: " + mNumSavedBusStops);
+
+    mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedStopPointViewModel.class);
+    mStopPoint = mSharedStopPointViewModel.getSelectedStopPoint().getValue();
   }
 
   @Nullable
@@ -157,6 +170,26 @@ public class BusDeparturesFragment extends Fragment {
       view = inflater.inflate(R.layout.activity_bus_departures, container, false);
       mUnbinder = ButterKnife.bind(this, view);
 
+      if (mNumSavedBusStops == MAX_NUM_SAVED_STOPS) {
+        mAddFavoriteButton.setClickable(false);
+      }
+
+      mAddFavoriteButton.setOnTouchListener(new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+          if (motionEvent.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            Log.d(TAG, "ACTION_DOWN");
+            if (mNumSavedBusStops == MAX_NUM_SAVED_STOPS) {
+              displayToast("You can add up to 3 bus stops", getActivity());
+            }
+          }
+          return false;
+        }
+      });
+
+      if (mStopPoint != null) {
+        setAppBarLayout(mStopPoint.getStopName(), mStopPoint.getStopCode());
+      }
       setToolbar();
       setRecyclerView();
     }
@@ -223,23 +256,90 @@ public class BusDeparturesFragment extends Fragment {
     mRecyclerView.setAdapter(mAdapter);
   }
 
+  private void displayToast(CharSequence message, Context context) {
+    Toast toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
+
+    // Change toast background color
+    toast.getView().getBackground().setColorFilter(
+      ResourcesCompat.getColor(getResources(), R.color.toast_background_color, null),
+      PorterDuff.Mode.SRC_IN
+    );
+
+    // Change toast text color
+    TextView text = toast.getView().findViewById(android.R.id.message);
+    text.setTextColor(ResourcesCompat.getColor(getResources(), R.color.white, null));
+
+    toast.show();
+  }
+
+  @Override
+  public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+    if (isChecked) {
+      if (mStopPoint != null) {
+        mDisposable.add(mUserSavedBusStopViewModel.insertBusStop(mUid, mStopPoint.getStopId(),
+          mStopPoint.getStopCode(), mStopPoint.getStopName())
+          .subscribeOn(Schedulers.io())
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribe(() -> {
+            Log.i(TAG, "Bus stop is successfully stored in the database.");
+            displayToast("Added to Favorites", getActivity());
+          }, throwable -> Log.e(TAG, "Unable to insert bus stop :(", throwable))
+        );
+        mNumSavedBusStops++;
+      }
+    } else {
+      if (mStopPoint != null) {
+        mDisposable.add(mUserSavedBusStopViewModel.deleteBusStopByUidAndStopId(mUid,
+          mStopPoint.getStopId())
+          .subscribeOn(Schedulers.io())
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribe(() -> {
+            Log.i(TAG, "Bus stop is successfully deleted from the database");
+            displayToast("Removed from Favorites", getActivity());
+          }, throwable -> Log.e(TAG, "Unable to delete bus stop :(", throwable))
+        );
+        mNumSavedBusStops--;
+      }
+    }
+
+    SharedPreferences sharedPref = getActivity().getSharedPreferences(
+      getString(R.string.preference_file_key), Context.MODE_PRIVATE
+    );
+    SharedPreferences.Editor editor = sharedPref.edit();
+    editor.putInt(getString(R.string.saved_bus_stops), mNumSavedBusStops);
+    editor.apply();
+  }
+
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
+    mUserSavedBusStopViewModelFactory =
+      Injection.provideUserSavedBusStopViewModelFactory(getContext());
+    mUserSavedBusStopViewModel = ViewModelProviders.of(this, mUserSavedBusStopViewModelFactory)
+      .get(UserSavedBusStopViewModel.class);
+
+    if (mUid != null && mStopPoint != null) {
+      mDisposable.add(mUserSavedBusStopViewModel.getNumBusStopsByUid(mUid, mStopPoint.getStopId())
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(numBusStops -> {
+          Log.d(TAG, "Num : " + numBusStops);
+          if (numBusStops == 1) {
+            mAddFavoriteButton.setChecked(true);
+            mAddFavoriteButton.setClickable(true);
+          }
+          mAddFavoriteButton.setOnCheckedChangeListener(this);
+        }));
+    }
+
     mSharedDepartureViewModel = ViewModelProviders.of(getActivity())
       .get(SharedDepartureViewModel.class);
 
-    mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
-      .get(SharedStopPointViewModel.class);
-    StopPoint stopPoint = mSharedStopPointViewModel.getSelectedStopPoint().getValue();
-    if (stopPoint != null) {
-      setAppBarLayout(stopPoint.getStopName(), stopPoint.getStopCode());
-    }
-
     mBusDeparturesViewModel = ViewModelProviders.of(getActivity()).get(BusDeparturesViewModel.class);
-    mBusDeparturesViewModel.init(stopPoint.getStopId());
+    mBusDeparturesViewModel.init(mStopPoint.getStopId());
     mBusDeparturesViewModel.getSortedDepartureList().observe(this, sortedDepartureList -> {
+      mProgressBar.setVisibility(INVISIBLE);
       if (sortedDepartureList != null) {
         Log.d(TAG, "Size: " + sortedDepartureList.size());
         mSize = sortedDepartureList.size();
@@ -255,9 +355,7 @@ public class BusDeparturesFragment extends Fragment {
     for (int i = 0; i < mSize; i++) {
       mAdapter.cancelTimer(mRecyclerView.findViewHolderForAdapterPosition(i));
     }
-    if (mAdapter.getViewHolder() != null) {
-      //mAdapter.onViewDetachedFromWindow(mAdapter.getViewHolder());
-    }
+
     mBusDeparturesViewModel.cancelTimer();
   }
 
@@ -265,6 +363,7 @@ public class BusDeparturesFragment extends Fragment {
   public void onStop() {
     super.onStop();
     Log.d(TAG, "onStop has called");
+    mDisposable.dispose();
   }
 
   @Override
@@ -286,6 +385,16 @@ public class BusDeparturesFragment extends Fragment {
         return true;
       default:
         return super.onOptionsItemSelected(item);
+    }
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+
+    if (mUnbinder != null) {
+      mUnbinder.unbind();
+      mUnbinder = null;
     }
   }
 }

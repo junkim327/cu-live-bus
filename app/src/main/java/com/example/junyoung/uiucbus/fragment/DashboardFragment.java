@@ -41,8 +41,8 @@ import com.example.junyoung.uiucbus.httpclient.services.DepartureService;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.UserSavedBusStopViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.UserSavedBusStopViewModel;
-import com.example.junyoung.uiucbus.utils.UtilConnection;
-import com.example.junyoung.uiucbus.utils.UtilSort;
+import com.example.junyoung.uiucbus.util.UtilConnection;
+import com.example.junyoung.uiucbus.util.UtilSort;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -145,7 +145,7 @@ public class DashboardFragment extends Fragment {
     );
 
     mUid = sharedPref.getString(getString(R.string.saved_uid), null);
-    mNumUserSavedBusStops = sharedPref.getInt(getString(R.string.saved_bus_stops), 0);
+    // mNumUserSavedBusStops = sharedPref.getInt(getString(R.string.saved_bus_stops), 0);
 
     mViewModelFactory = Injection.provideUserSavedBusStopViewModelFactory(getContext());
     mViewModel = ViewModelProviders.of(this, mViewModelFactory)
@@ -189,7 +189,7 @@ public class DashboardFragment extends Fragment {
       mGuidanceTextOne.setVisibility(GONE);
       mGuidanceTextTwo.setVisibility(GONE);
 
-      setRecyclerView();
+      //setRecyclerView();
     }
   }
 
@@ -209,7 +209,6 @@ public class DashboardFragment extends Fragment {
 
       setToolbar();
       setViewPager();
-      controlViewVisibility();
     }
 
     return view;
@@ -243,7 +242,7 @@ public class DashboardFragment extends Fragment {
           Log.d(TAG, "onNext has called");
           if (departuresByStops != null && departuresByStops.size() != 0) {
             if (mNumBanner != 0) {
-              busSchedules = mAdapter.getBusSchedules();
+              //busSchedules = mAdapter.getBusSchedules();
             }
             String busStopName;
             ArrayList<Integer> headerPosition = new ArrayList<>();
@@ -261,13 +260,13 @@ public class DashboardFragment extends Fragment {
                   departuresByStops.get(i).getDepartures(),
                   bannerIndex
                 );
-                mAdapter.updateBusSchedules(busSchedules, headerPosition);
+                //mAdapter.updateBusSchedules(busSchedules, headerPosition);
               } else {
                 NotifyItemData itemData = UtilSort.sortDeparturesByBus3(
                   busSchedules,
                   departuresByStops.get(i).getDepartures(),
                   bannerIndex.get(i));
-                mAdapter.updateBusData(itemData);
+                //mAdapter.updateBusData(itemData);
               }
             }
             //progressBar.setVisibility(GONE);
@@ -301,6 +300,9 @@ public class DashboardFragment extends Fragment {
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(userSavedBusStops -> {
             if (userSavedBusStops != null) {
+              mNumUserSavedBusStops = userSavedBusStops.size();
+              controlViewVisibility();
+
               ArrayList<String> busStopId = new ArrayList<>();
               ArrayList<String> busStopCode = new ArrayList<>();
               ArrayList<String> busStopName = new ArrayList<>();

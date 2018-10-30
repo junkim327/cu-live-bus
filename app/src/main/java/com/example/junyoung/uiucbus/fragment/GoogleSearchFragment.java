@@ -1,4 +1,4 @@
-package com.example.junyoung.uiucbus.fragments;
+package com.example.junyoung.uiucbus.fragment;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -23,12 +23,12 @@ import android.widget.TextView;
 import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
-import com.example.junyoung.uiucbus.adapters.RecentPlaceAdapter;
+import com.example.junyoung.uiucbus.adapter.RecentPlaceAdapter;
 import com.example.junyoung.uiucbus.room.entity.UserPlace;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.PlaceViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.PlaceViewModel;
-import com.example.junyoung.uiucbus.utils.UtilConnection;
+import com.example.junyoung.uiucbus.util.UtilConnection;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -101,7 +101,7 @@ public class GoogleSearchFragment extends Fragment {
       mInternetConnectedCallback = (OnInternetConnectedListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
-        + " must implement OnRecentDirectionClickListener.");
+        + " must implement OnInternetConnectedListener.");
     }
 
     try {

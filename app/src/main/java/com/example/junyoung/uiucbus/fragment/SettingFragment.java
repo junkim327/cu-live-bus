@@ -1,16 +1,22 @@
-package com.example.junyoung.uiucbus.fragments;
+package com.example.junyoung.uiucbus.fragment;
 
-import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.example.junyoung.uiucbus.R;
@@ -20,10 +26,12 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 
-public class SettingContentsFragment extends Fragment {
-  private Unbinder unbinder;
-  private OnEditFavoritesClickListener onEditFavoritesCallback;
+public class SettingFragment extends Fragment {
+  private Unbinder mUnbinder;
+  // private OnEditFavoritesClickListener onEditFavoritesCallback;
 
+  @BindView(R.id.toolbar_setting)
+  Toolbar mToolbar;
   @BindView(R.id.layout_contact_us_settting_content)
   LinearLayout contactUsLayout;
   @BindView(R.id.layout_edit_favorites_setting_content)
@@ -33,6 +41,7 @@ public class SettingContentsFragment extends Fragment {
   @BindView(R.id.layout_data_attribution_setting_content)
   LinearLayout dataAttributionLayout;
 
+  /*
   public interface OnEditFavoritesClickListener {
     void onEditFavoritesClick();
   }
@@ -48,14 +57,41 @@ public class SettingContentsFragment extends Fragment {
       + " must implement OnEditFavoritesClickListener");
     }
   }
+  */
 
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-    View view = inflater.inflate(R.layout.fragment_setting_contents, container, false);
-    unbinder = ButterKnife.bind(this, view);
+    View view = inflater.inflate(R.layout.fragment_setting, container, false);
+    mUnbinder = ButterKnife.bind(this, view);
+
+    setToolbar();
 
     return view;
+  }
+
+  private void setToolbar() {
+    ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
+    mToolbar.setTitleTextColor(Color.WHITE);
+
+    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+    if (actionBar != null) {
+      setHasOptionsMenu(true);
+      actionBar.setTitle(R.string.setting_toolbar_title);
+      actionBar.setDisplayHomeAsUpEnabled(true);
+      actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
+    }
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+      case android.R.id.home:
+        getActivity().getSupportFragmentManager().popBackStackImmediate();
+        return true;
+      default:
+        return super.onOptionsItemSelected(item);
+    }
   }
 
   @OnClick(R.id.layout_contact_us_settting_content)
@@ -71,15 +107,17 @@ public class SettingContentsFragment extends Fragment {
     }
   }
 
+  /*
   @OnClick(R.id.layout_edit_favorites_setting_content)
   public void editFavorites() {
     onEditFavoritesCallback.onEditFavoritesClick();
   }
+  */
 
 
   @Override
   public void onDestroyView() {
     super.onDestroyView();
-    unbinder.unbind();
+    mUnbinder.unbind();
   }
 }

@@ -1,4 +1,4 @@
-package com.example.junyoung.uiucbus.fragments;
+package com.example.junyoung.uiucbus.fragment;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -23,12 +23,12 @@ import android.widget.TextView;
 import com.example.junyoung.uiucbus.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RecyclerviewClickListener;
-import com.example.junyoung.uiucbus.adapters.RecentDirectionAdapter;
+import com.example.junyoung.uiucbus.adapter.RecentDirectionAdapter;
 import com.example.junyoung.uiucbus.room.entity.RouteInfo;
 import com.example.junyoung.uiucbus.ui.factory.DirectionViewModelFactory;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.viewmodel.RouteInfoViewModel;
-import com.example.junyoung.uiucbus.utils.UtilConnection;
+import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;

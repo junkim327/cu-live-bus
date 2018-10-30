@@ -36,15 +36,16 @@ import com.example.junyoung.uiucbus.adapter.BusStopsAdapter;
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
 import com.example.junyoung.uiucbus.httpclient.pojos.BusStops;
 import com.example.junyoung.uiucbus.httpclient.pojos.Stop;
-import com.example.junyoung.uiucbus.httpclient.services.BusStopsServices;
+import com.example.junyoung.uiucbus.httpclient.services.BusStopService;
 import com.example.junyoung.uiucbus.room.entity.StopPoint;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.UserSearchedBusStopViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedStopPointViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.UserSearchedBusStopViewModel;
-import com.example.junyoung.uiucbus.utils.UtilConnection;
+import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,10 +61,11 @@ public class BusStopSearchFragment extends Fragment {
   private static final String TAG = BusStopSearchFragment.class.getSimpleName();
 
   private String mUid;
+  private int mClickTag;
   private boolean mIsInternetConnected = true;
 
-  private ArrayList<StopPoint> mStopPointList = new ArrayList<>();
-  private ArrayList<StopPoint> mUserSearchedBusStopPointList = new ArrayList<>();
+  private List<StopPoint> mStopPointList = new ArrayList<>();
+  private List<StopPoint> mStopPointFromDBList = new ArrayList<>();
 
   private BusStopsAdapter mAdapter;
   private Unbinder mUnbinder;
@@ -140,20 +142,7 @@ public class BusStopSearchFragment extends Fragment {
     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
     mRecyclerView.setLayoutManager(layoutManager);
 
-    RecyclerviewClickListener listener = (view, position) -> {
-      if (mStopPointList != null) {
-        StopPoint stopPoint = mStopPointList.get(position);
-        mSharedStopPointViewModel.select(stopPoint);
-        mDisposable.add(mViewModel.insertBusStop(mUid, stopPoint.getStopId(),
-          stopPoint.getStopCode(), stopPoint.getStopName(), stopPoint.getLatitude(),
-          stopPoint.getLongitude())
-        .subscribeOn(Schedulers.io())
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe(() -> Log.i(TAG, "Stop point is successfully stored in the database."),
-          throwable -> Log.e(TAG, "Unable to insert place :(", throwable)));
-        mBusStopSelectedCallback.onBusStopSelected();
-      }
-    };
+    RecyclerviewClickListener listener = this::onRecyclerViewItemClicked;
     mAdapter = new BusStopsAdapter(getContext(), listener);
     mRecyclerView.setAdapter(mAdapter);
 
@@ -162,6 +151,31 @@ public class BusStopSearchFragment extends Fragment {
       DividerItemDecoration.VERTICAL
     );
     mRecyclerView.addItemDecoration(dividerItemDecoration);
+  }
+
+  /**
+   * TODO: later
+   *
+   * @param view ItemView which user clicked.
+   * @param position Adapter position of the ItemView.
+   */
+  private void onRecyclerViewItemClicked(View view, int position) {
+    StopPoint stopPoint;
+    if (mStopPointList != null && mClickTag == 0) {
+      stopPoint = mStopPointList.get(position);
+      mSharedStopPointViewModel.select(stopPoint);
+      mDisposable.add(mViewModel.insertBusStop(mUid, stopPoint.getStopId(),
+        stopPoint.getStopCode(), stopPoint.getStopName(), stopPoint.getLatitude(),
+        stopPoint.getLongitude())
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(() -> Log.i(TAG, "Stop point is successfully stored in the database."),
+          throwable -> Log.e(TAG, "Unable to insert place :(", throwable)));
+    } else {
+      stopPoint = mStopPointFromDBList.get(position);
+      mSharedStopPointViewModel.select(stopPoint);
+    }
+    mBusStopSelectedCallback.onBusStopSelected();
   }
 
   @Nullable
@@ -206,11 +220,20 @@ public class BusStopSearchFragment extends Fragment {
       .observeOn(AndroidSchedulers.mainThread())
       .subscribe(userSearchedBusStops -> {
         if (userSearchedBusStops != null) {
+          mClickTag = 1;
+          mStopPointFromDBList.clear();
+          mStopPointFromDBList.addAll(userSearchedBusStops);
           mAdapter.updateStopsList(userSearchedBusStops);
         }
       },
         throwable -> Log.e(TAG, "Unable to load user saved bus stops", throwable)));
     }
+  }
+
+  @Override
+  public void onStop() {
+    super.onStop();
+    mDisposable.clear();
   }
 
   private void setSearchEditText() {
@@ -266,25 +289,30 @@ public class BusStopSearchFragment extends Fragment {
         mWarningImageView.setVisibility(View.INVISIBLE);
         mNoResultTextView.setVisibility(View.INVISIBLE);
 
-        BusStopsServices service =
-          RetrofitBuilder.getRetrofitInstance().create(BusStopsServices.class);
+        if (newText.contentEquals("")) {
+          mAdapter.updateStopsList(mStopPointFromDBList);
+          return false;
+        }
+        BusStopService service =
+          RetrofitBuilder.getRetrofitInstance().create(BusStopService.class);
         Call<BusStops> call = service.getStopsBySearch(Constants.API_KEY, newText);
 
         call.enqueue(new Callback<BusStops>() {
           @Override
-          public void onResponse(Call<BusStops> call, Response<BusStops> response) {
-            if (response.isSuccessful()) {
+          public void onResponse(@NonNull Call<BusStops> call, @NonNull Response<BusStops> response) {
+            if (response.isSuccessful() && response.body() != null) {
               ArrayList<Stop> stops = response.body().getStops();
 
               if (stops != null && !stops.isEmpty()) {
                 mStopPointList = response.body().getStops().get(0).getStopPoints();
               }
+              mClickTag = 0;
               mAdapter.updateStopsList(mStopPointList);
             }
           }
 
           @Override
-          public void onFailure(Call<BusStops> call, Throwable t) {
+          public void onFailure(@NonNull Call<BusStops> call, @NonNull Throwable t) {
 
           }
         });
@@ -296,8 +324,7 @@ public class BusStopSearchFragment extends Fragment {
     final ImageView closeButton = mSearchView.findViewById(R.id.search_close_btn);
     closeButton.setVisibility(View.GONE);
     closeButton.setOnClickListener(view -> {
-      mStopPointList.clear();
-      mAdapter.notifyItemRangeChanged(0, mStopPointList.size());
+      //mAdapter.updateStopsList(mStopPointFromDBList);
       mSearchView.setQuery("", false);
       closeButton.setVisibility(View.GONE);
     });
