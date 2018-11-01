@@ -40,22 +40,27 @@ import com.example.junyoung.uiucbus.httpclient.pojos.NotifyItemData;
 import com.example.junyoung.uiucbus.httpclient.services.DepartureService;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.UserSavedBusStopViewModelFactory;
-import com.example.junyoung.uiucbus.ui.viewmodel.UserSavedBusStopViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.BusDeparturesViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SavedBusStopViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 import com.example.junyoung.uiucbus.util.UtilSort;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.schedulers.Timed;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -74,7 +79,8 @@ public class DashboardFragment extends Fragment {
   private Unbinder mUnbinder;
   private ConnectivityManager mConnectivityManager;
   private BusFavoriteDeparturesAdapter mAdapter;
-  private UserSavedBusStopViewModel mViewModel;
+  private BusDeparturesViewModel mBusDepartureViewModel;
+  private SavedBusStopViewModel mViewModel;
   private UserSavedBusStopViewModelFactory mViewModelFactory;
   private OnInternetConnectedListener mInternetConnectedCallback;
   private OnSettingItemSelectedListener mSettingSelectedCallback;
@@ -149,7 +155,7 @@ public class DashboardFragment extends Fragment {
 
     mViewModelFactory = Injection.provideUserSavedBusStopViewModelFactory(getContext());
     mViewModel = ViewModelProviders.of(this, mViewModelFactory)
-      .get(UserSavedBusStopViewModel.class);
+      .get(SavedBusStopViewModel.class);
   }
 
   private void setToolbar() {
@@ -189,7 +195,7 @@ public class DashboardFragment extends Fragment {
       mGuidanceTextOne.setVisibility(GONE);
       mGuidanceTextTwo.setVisibility(GONE);
 
-      //setRecyclerView();
+      setRecyclerView();
     }
   }
 
@@ -214,6 +220,13 @@ public class DashboardFragment extends Fragment {
     return view;
   }
 
+  @Override
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+
+    mBusDepartureViewModel = ViewModelProviders.of(this).get(BusDeparturesViewModel.class);
+  }
+
   private void performGETBusDeparturesRequest(final ArrayList<String> savedStopIds,
                                               final ArrayList<String> savedStopCodes,
                                               final ArrayList<String> savedStopNames) {
@@ -223,10 +236,10 @@ public class DashboardFragment extends Fragment {
     for (String stopId : savedStopIds) {
       Observable<DeparturesByStop> observable =
         service.getDeparturesByStop(Constants.API_KEY, stopId);
-      observableList.add(observable.subscribeOn(Schedulers.newThread()));
+      observableList.add(observable.subscribeOn(Schedulers.io()));
     }
 
-    mDisposable.add(Observable.zip(observableList, objects -> {
+    Observable<List<DeparturesByStop>> obs= Observable.zip(observableList, objects -> {
       List<DeparturesByStop> stopList = new ArrayList<>();
       for (Object obj : objects) {
         stopList.add((DeparturesByStop) obj);
@@ -234,13 +247,54 @@ public class DashboardFragment extends Fragment {
       Log.i(TAG, "Size of stop list : " + stopList.size());
 
       return stopList;
-    }).subscribeOn(Schedulers.io())
+    });
+
+    Observable.interval(10, TimeUnit.SECONDS).timeInterval()
+      .flatMap(new Function<Timed<Long>, ObservableSource<List<DeparturesByStop>>>() {
+        @Override
+        public ObservableSource<List<DeparturesByStop>> apply(Timed<Long> longTimed) throws
+          Exception {
+          return Observable.zip(observableList, objects -> {
+            List<DeparturesByStop> stopList = new ArrayList<>();
+            for (Object obj : objects) {
+              stopList.add((DeparturesByStop) obj);
+            }
+            Log.i(TAG, "Size of stop list : " + stopList.size());
+
+            return stopList;
+          });
+        }
+      }).observeOn(AndroidSchedulers.mainThread())
+      .subscribe(new DisposableObserver<List<DeparturesByStop>>() {
+        @Override
+        public void onNext(List<DeparturesByStop> departuresByStops) {
+          Log.d(TAG, "onNext has called with some items: " + departuresByStops.size());
+        }
+
+        @Override
+        public void onError(Throwable e) {
+
+        }
+
+        @Override
+        public void onComplete() {
+
+        }
+      });
+
+    Observable<Long> interval = Observable.interval(1, TimeUnit.SECONDS);
+
+    Observable<List<DeparturesByStop>> everyMinute = obs.sample(interval);
+
+    mDisposable.add(everyMinute
+      .subscribeOn(Schedulers.computation())
       .observeOn(AndroidSchedulers.mainThread())
       .subscribeWith(new DisposableObserver<List<DeparturesByStop>>() {
         @Override
         public void onNext(List<DeparturesByStop> departuresByStops) {
           Log.d(TAG, "onNext has called");
           if (departuresByStops != null && departuresByStops.size() != 0) {
+            /*
             if (mNumBanner != 0) {
               //busSchedules = mAdapter.getBusSchedules();
             }
@@ -270,6 +324,7 @@ public class DashboardFragment extends Fragment {
               }
             }
             //progressBar.setVisibility(GONE);
+            */
           }
         }
 
@@ -299,6 +354,7 @@ public class DashboardFragment extends Fragment {
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(userSavedBusStops -> {
+            Log.d(TAG, "Load user saved bus stops successfully.");
             if (userSavedBusStops != null) {
               mNumUserSavedBusStops = userSavedBusStops.size();
               controlViewVisibility();
@@ -311,6 +367,7 @@ public class DashboardFragment extends Fragment {
                 busStopCode.add(userSavedBusStops.get(i).getSavedStopCode());
                 busStopName.add(userSavedBusStops.get(i).getSavedStopName());
               }
+
               performGETBusDeparturesRequest(busStopId, busStopCode, busStopName);
             }
           },
