@@ -1,5 +1,6 @@
 package com.example.junyoung.uiucbus.fragment;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
@@ -17,50 +18,49 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.junyoung.uiucbus.CustomLinearLayoutManager;
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
-import com.example.junyoung.uiucbus.RecyclerviewClickListener;
-import com.example.junyoung.uiucbus.adapter.PlannedTripResultsAdapter;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
+import com.example.junyoung.uiucbus.adapter.PlannedTripResultAdapter;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.httpclient.pojos.Itinerary;
 import com.example.junyoung.uiucbus.httpclient.pojos.Leg;
+import com.example.junyoung.uiucbus.ui.viewmodel.SharedItineraryViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SharedTripViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class PlannedTripsResultFragment extends Fragment {
-  public static final String EXTRA_ITINERARIES =
-    "com.example.junyoung.uiucbus.fragments.EXTRA_ITINERARIES";
+  private boolean mIsConnected = true;
 
-  private ArrayList<Leg> busList = null;
-  private ArrayList<Leg> walkList = null;
-  private ArrayList<Itinerary> itineraries = null;
+  private List<Leg> busList = Collections.emptyList();
+  private List<Leg> walkList = Collections.emptyList();
+
+  // TODO: Change ArrayList to List
+  private PlannedTripResultAdapter mAdapter;
   private ConnectivityManager mConnectivityManager;
+
+  // View models
+  private SharedTripViewModel mSharedTripViewModel;
+  private SharedItineraryViewModel mSharedItineraryViewModel;
+
+  // Callbacks
   private OnInternetConnectedListener mInternetConnectedCallback;
-  private PlannedTripResultsClickListener onPlannedTripResultsCallback;
+  private PlannedTripResultClickListener onPlannedTripResultsCallback;
 
   @BindView(R.id.recyclerview_planned_trips_result)
-  RecyclerView recyclerView;
+  RecyclerView mRecyclerView;
   @BindView(R.id.textview_no_transit_routes_planned_trips_result)
-  TextView noTransitRoutesTextView;
+  TextView mNoTransitRoutesTextView;
   @BindView(R.id.imageview_no_transit_routes_planned_trips_result)
-  ImageView noTransitRoutesImageView;
+  ImageView mNoTransitRoutesImageView;
 
-  public interface PlannedTripResultsClickListener {
-    void onPlannedTripResultsClickListener(Itinerary itinerary,
-                                           ArrayList<Leg> busList,
-                                           ArrayList<Leg> walkList);
-  }
-
-  public static PlannedTripsResultFragment newInstance(ArrayList<Itinerary> itineraries) {
-    PlannedTripsResultFragment fragment = new PlannedTripsResultFragment();
-    Bundle args = new Bundle();
-    args.putParcelableArrayList(EXTRA_ITINERARIES, itineraries);
-    fragment.setArguments(args);
-
-    return fragment;
+  public interface PlannedTripResultClickListener {
+    void onPlannedTripResultClicked();
   }
 
   @Override
@@ -75,7 +75,7 @@ public class PlannedTripsResultFragment extends Fragment {
     }
 
     try {
-      onPlannedTripResultsCallback = (PlannedTripResultsClickListener) context;
+      onPlannedTripResultsCallback = (PlannedTripResultClickListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
         + " must implement OnPlannedTripResultsClickListener."
@@ -90,75 +90,82 @@ public class PlannedTripsResultFragment extends Fragment {
     mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
       Context.CONNECTIVITY_SERVICE
     );
-
-    if (getArguments() != null) {
-      this.itineraries = getArguments().getParcelableArrayList(EXTRA_ITINERARIES);
-    }
+    mSharedTripViewModel = ViewModelProviders.of(getActivity()).get(SharedTripViewModel.class);
   }
 
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                            @Nullable Bundle savedInstanceState) {
-    boolean isConnected  = true;
     if (mConnectivityManager != null) {
-      isConnected = UtilConnection.isInternetConnected(mConnectivityManager,
+      mIsConnected = UtilConnection.isInternetConnected(mConnectivityManager,
         mInternetConnectedCallback, true);
     }
 
-    if (isConnected) {
-      View view = inflater.inflate(R.layout.fragment_planned_trips_result, container, false);
+    View view = null;
+    if (mIsConnected) {
+      view = inflater.inflate(R.layout.fragment_planned_trips_result, container, false);
       ButterKnife.bind(this, view);
 
-      if (itineraries == null || itineraries.size() == 0) {
-        recyclerView.setVisibility(View.GONE);
-        noTransitRoutesTextView.setVisibility(View.VISIBLE);
-        noTransitRoutesImageView.setVisibility(View.VISIBLE);
-      } else {
-        recyclerView.setVisibility(View.VISIBLE);
-        noTransitRoutesTextView.setVisibility(View.GONE);
-        noTransitRoutesImageView.setVisibility(View.GONE);
-
-        recyclerView.setHasFixedSize(true);
-        LayoutManager layoutManager = new CustomLinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(layoutManager);
-        LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(
-          getContext(),
-          R.anim.layout_animation_fall_down_long
-        );
-        recyclerView.setLayoutAnimation(animation);
-
-        RecyclerviewClickListener listener = (view1, position) -> {
-          setBusandWalkList(itineraries.get(position));
-          onPlannedTripResultsCallback.onPlannedTripResultsClickListener(
-            itineraries.get(position),
-            busList,
-            walkList
-          );
-        };
-        RecyclerView.Adapter adapter = new PlannedTripResultsAdapter(
-          getContext(),
-          itineraries,
-          listener
-        );
-        recyclerView.setAdapter(adapter);
-      }
-
-      return view;
+      setRecyclerView();
     }
 
-    return null;
+    return view;
+  }
+
+  private void setRecyclerView() {
+    mRecyclerView.setHasFixedSize(true);
+
+    LayoutManager layoutManager = new CustomLinearLayoutManager(getContext());
+    mRecyclerView.setLayoutManager(layoutManager);
+
+    LayoutAnimationController animation = AnimationUtils.loadLayoutAnimation(
+      getActivity(),
+      R.anim.layout_animation_fall_down_long
+    );
+    mRecyclerView.setLayoutAnimation(animation);
+
+    RecyclerviewClickListener listener = (view1, position) -> {
+      mSharedTripViewModel.select(mAdapter.getItinerary(position));
+      onPlannedTripResultsCallback.onPlannedTripResultClicked();
+    };
+    mAdapter = new PlannedTripResultAdapter(getContext(), listener);
+    mRecyclerView.setAdapter(mAdapter);
   }
 
   private void setBusandWalkList(Itinerary itinerary) {
-    busList = new ArrayList<>();
-    walkList = new ArrayList<>();
     for (Leg leg : itinerary.getLegs()) {
       if (leg.getType().contentEquals(getResources().getString(R.string.type_service))) {
         busList.add(leg);
       } else {
         walkList.add(leg);
       }
+    }
+  }
+
+  @Override
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+
+    mSharedItineraryViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedItineraryViewModel.class);
+    mSharedItineraryViewModel.getItineraryList().observe(this, itineraryList -> {
+      if (itineraryList != null) {
+        mAdapter.updateItineraryList(itineraryList);
+        controlViewVisibility(itineraryList);
+      }
+    });
+  }
+
+  private void controlViewVisibility(List<Itinerary> itineraryList) {
+    if (itineraryList == null || itineraryList.size() == 0) {
+      mRecyclerView.setVisibility(View.GONE);
+      mNoTransitRoutesTextView.setVisibility(View.VISIBLE);
+      mNoTransitRoutesImageView.setVisibility(View.VISIBLE);
+    } else {
+      mRecyclerView.setVisibility(View.VISIBLE);
+      mNoTransitRoutesTextView.setVisibility(View.GONE);
+      mNoTransitRoutesImageView.setVisibility(View.GONE);
     }
   }
 

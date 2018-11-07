@@ -20,14 +20,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.RecyclerviewClickListener;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapter.RecentDirectionAdapter;
 import com.example.junyoung.uiucbus.room.entity.RouteInfo;
 import com.example.junyoung.uiucbus.ui.factory.DirectionViewModelFactory;
 import com.example.junyoung.uiucbus.ui.Injection;
-import com.example.junyoung.uiucbus.ui.viewmodel.RouteInfoViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.DirectionInfoViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import butterknife.BindView;
@@ -45,13 +45,14 @@ public class RecentDirectionFragment extends Fragment {
   private static final String TAG = RecentDirectionFragment.class.getSimpleName();
 
   private String mUid;
+  private boolean mIsInternetConnected = true;
 
   private Unbinder mUnbinder;
   private RecentDirectionAdapter mAdapter;
   private ConnectivityManager mConnectivityManager;
   private OnInternetConnectedListener mInternetConnectedCallback;
   private OnRecentDirectionClickedkListener mRecentDirectionCallback;
-  private RouteInfoViewModel mViewModel;
+  private DirectionInfoViewModel mViewModel;
   private DirectionViewModelFactory mViewModelFactory;
   private final CompositeDisposable mDisposable = new CompositeDisposable();
 
@@ -105,22 +106,26 @@ public class RecentDirectionFragment extends Fragment {
     Log.d(TAG, "you think this line is called?");
 
     mViewModelFactory = Injection.provideDirectionViewModelFactory(getContext());
-    mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(RouteInfoViewModel.class);
+    mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(DirectionInfoViewModel.class);
   }
 
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
     if (mConnectivityManager != null) {
-      UtilConnection.isInternetConnected(mConnectivityManager, mInternetConnectedCallback, true);
+      mIsInternetConnected = UtilConnection.isInternetConnected(mConnectivityManager,
+        mInternetConnectedCallback, true);
     }
 
-    View view = inflater.inflate(R.layout.fragment_recent_direction, container, false);
-    mUnbinder = ButterKnife.bind(this, view);
+    View view = null;
+    if (mIsInternetConnected) {
+      view = inflater.inflate(R.layout.fragment_recent_direction, container, false);
+      mUnbinder = ButterKnife.bind(this, view);
 
-    Log.d(TAG, "onCreateView is called");
+      Log.d(TAG, "onCreateView is called");
 
-    setRecyclerView();
+      setRecyclerView();
+    }
 
     return view;
   }
@@ -149,14 +154,7 @@ public class RecentDirectionFragment extends Fragment {
     mRecyclerview.addItemDecoration(dividerItemDecoration);
 
     RecyclerviewClickListener listener = (view, position) -> {
-      boolean isConnected = true;
-      if (mConnectivityManager != null) {
-        isConnected = UtilConnection.isInternetConnected(mConnectivityManager,
-          mInternetConnectedCallback,
-          true);
-      }
-
-      if (mAdapter != null && isConnected) {
+      if (mAdapter != null) {
         RouteInfo selectedDirectionInfo = mAdapter.getDirectionList().get(position);
         mRecentDirectionCallback.onRecentDirectionClick(selectedDirectionInfo);
       }

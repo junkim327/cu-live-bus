@@ -19,7 +19,7 @@ import android.view.ViewGroup;
 
 import com.example.junyoung.uiucbus.ItemLongClickHelperCallback;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.RecyclerviewClickListener;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.SharedPrefUtil;
 import com.example.junyoung.uiucbus.adapter.EditFavoritesAdapter;
 import com.google.gson.Gson;

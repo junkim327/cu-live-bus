@@ -24,43 +24,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.junyoung.uiucbus.Constants;
-import com.example.junyoung.uiucbus.MainActivity;
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.airbnb.epoxy.EpoxyRecyclerView;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapter.BusFavoriteDeparturesAdapter;
 import com.example.junyoung.uiucbus.adapter.MainViewPagerAdapter;
-import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
-import com.example.junyoung.uiucbus.httpclient.pojos.BusInfo;
-import com.example.junyoung.uiucbus.httpclient.pojos.BusSchedules;
-import com.example.junyoung.uiucbus.httpclient.pojos.DeparturesByStop;
-import com.example.junyoung.uiucbus.httpclient.pojos.NotifyItemData;
-import com.example.junyoung.uiucbus.httpclient.services.DepartureService;
+import com.example.junyoung.uiucbus.httpclient.pojos.FavoriteBusDepartures;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.UserSavedBusStopViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.BusDeparturesViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.Response;
 import com.example.junyoung.uiucbus.ui.viewmodel.SavedBusStopViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
-import com.example.junyoung.uiucbus.util.UtilSort;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.functions.Function;
-import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
-import io.reactivex.schedulers.Timed;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -69,12 +58,8 @@ public class DashboardFragment extends Fragment {
   private static final String TAG = DashboardFragment.class.getSimpleName();
 
   private String mUid;
-  private boolean isInternetConnected;
-  private int mNumBanner = 0;
   private int mNumUserSavedBusStops;
-
-  private BusSchedules busSchedules = new BusSchedules();
-  private ArrayList<Integer> bannerIndex = new ArrayList<>();
+  private boolean isInternetConnected = true;
 
   private Unbinder mUnbinder;
   private ConnectivityManager mConnectivityManager;
@@ -91,10 +76,12 @@ public class DashboardFragment extends Fragment {
   Toolbar mToolbar;
   @BindView(R.id.edittext_search_bus_stops_dashboard)
   EditText mSearchBusStopsEditText;
+  @BindView(R.id.progressbar_dashboard)
+  ProgressBar mProgressBar;
   @BindView(R.id.viewpager_dashboard)
   ViewPager mViewPager;
   @BindView(R.id.recyclerview_dashboard)
-  RecyclerView mRecyclerview;
+  EpoxyRecyclerView mRecyclerview;
   @BindView(R.id.text_data_provider_dashboard)
   TextView mDataProviderText;
   @BindView(R.id.image_when_no_favorite_bus_stops_dashboard)
@@ -115,6 +102,7 @@ public class DashboardFragment extends Fragment {
   @Override
   public void onAttach(Context context) {
     super.onAttach(context);
+    Log.d(TAG, "onAttach has called");
 
     try {
       mInternetConnectedCallback = (OnInternetConnectedListener) context;
@@ -141,6 +129,7 @@ public class DashboardFragment extends Fragment {
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    Log.d(TAG, "onCreate has called.");
 
     mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
       Context.CONNECTIVITY_SERVICE
@@ -183,7 +172,13 @@ public class DashboardFragment extends Fragment {
     ((SimpleItemAnimator) mRecyclerview.getItemAnimator())
       .setSupportsChangeAnimations(false);
 
-    mAdapter = new BusFavoriteDeparturesAdapter(getContext(), MainActivity.TAG, new BusSchedules());
+    RecyclerviewClickListener departureClickListener = new RecyclerviewClickListener() {
+      @Override
+      public void onClick(View view, int position) {
+
+      }
+    };
+    mAdapter = new BusFavoriteDeparturesAdapter(getContext(), departureClickListener);
     mRecyclerview.setAdapter(mAdapter);
   }
 
@@ -194,19 +189,23 @@ public class DashboardFragment extends Fragment {
       mGuidanceImage.setVisibility(GONE);
       mGuidanceTextOne.setVisibility(GONE);
       mGuidanceTextTwo.setVisibility(GONE);
-
-      setRecyclerView();
+    } else {
+      mRecyclerview.setVisibility(GONE);
+      mDataProviderText.setVisibility(GONE);
+      mGuidanceImage.setVisibility(VISIBLE);
+      mGuidanceTextOne.setVisibility(VISIBLE);
+      mGuidanceTextTwo.setVisibility(VISIBLE);
     }
   }
 
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-    isInternetConnected = true;
     if (mConnectivityManager != null) {
       isInternetConnected = UtilConnection.isInternetConnected(mConnectivityManager,
         mInternetConnectedCallback, false);
     }
+    Log.d(TAG, "onCreateView has called");
 
     View view = null;
     if (isInternetConnected) {
@@ -215,6 +214,7 @@ public class DashboardFragment extends Fragment {
 
       setToolbar();
       setViewPager();
+      setRecyclerView();
     }
 
     return view;
@@ -223,121 +223,38 @@ public class DashboardFragment extends Fragment {
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
+    Log.d(TAG, "onActivityCreated has called");
 
-    mBusDepartureViewModel = ViewModelProviders.of(this).get(BusDeparturesViewModel.class);
-  }
-
-  private void performGETBusDeparturesRequest(final ArrayList<String> savedStopIds,
-                                              final ArrayList<String> savedStopCodes,
-                                              final ArrayList<String> savedStopNames) {
-    DepartureService service =
-      RetrofitBuilder.getRetrofitandRxJavaInstance().create(DepartureService.class);
-    final List<Observable<DeparturesByStop>> observableList = new ArrayList<>();
-    for (String stopId : savedStopIds) {
-      Observable<DeparturesByStop> observable =
-        service.getDeparturesByStop(Constants.API_KEY, stopId);
-      observableList.add(observable.subscribeOn(Schedulers.io()));
-    }
-
-    Observable<List<DeparturesByStop>> obs= Observable.zip(observableList, objects -> {
-      List<DeparturesByStop> stopList = new ArrayList<>();
-      for (Object obj : objects) {
-        stopList.add((DeparturesByStop) obj);
-      }
-      Log.i(TAG, "Size of stop list : " + stopList.size());
-
-      return stopList;
-    });
-
-    Observable.interval(10, TimeUnit.SECONDS).timeInterval()
-      .flatMap(new Function<Timed<Long>, ObservableSource<List<DeparturesByStop>>>() {
-        @Override
-        public ObservableSource<List<DeparturesByStop>> apply(Timed<Long> longTimed) throws
-          Exception {
-          return Observable.zip(observableList, objects -> {
-            List<DeparturesByStop> stopList = new ArrayList<>();
-            for (Object obj : objects) {
-              stopList.add((DeparturesByStop) obj);
-            }
-            Log.i(TAG, "Size of stop list : " + stopList.size());
-
-            return stopList;
-          });
-        }
-      }).observeOn(AndroidSchedulers.mainThread())
-      .subscribe(new DisposableObserver<List<DeparturesByStop>>() {
-        @Override
-        public void onNext(List<DeparturesByStop> departuresByStops) {
-          Log.d(TAG, "onNext has called with some items: " + departuresByStops.size());
-        }
-
-        @Override
-        public void onError(Throwable e) {
-
-        }
-
-        @Override
-        public void onComplete() {
-
+    if (mBusDepartureViewModel == null) {
+      mBusDepartureViewModel = ViewModelProviders.of(this).get(BusDeparturesViewModel.class);
+      mBusDepartureViewModel.getResponse().observe(this, listResponse -> {
+        Log.d(TAG, "getResponse() has called.");
+        if (listResponse != null) {
+          Log.d(TAG, "Status : " + listResponse.mStatus.toString());
+          processResponse(listResponse);
         }
       });
+    }
+  }
 
-    Observable<Long> interval = Observable.interval(1, TimeUnit.SECONDS);
+  private void processResponse(Response<List<FavoriteBusDepartures>> response) {
+    switch (response.mStatus) {
+      case LOADING:
+        mProgressBar.setVisibility(VISIBLE);
+        break;
 
-    Observable<List<DeparturesByStop>> everyMinute = obs.sample(interval);
-
-    mDisposable.add(everyMinute
-      .subscribeOn(Schedulers.computation())
-      .observeOn(AndroidSchedulers.mainThread())
-      .subscribeWith(new DisposableObserver<List<DeparturesByStop>>() {
-        @Override
-        public void onNext(List<DeparturesByStop> departuresByStops) {
-          Log.d(TAG, "onNext has called");
-          if (departuresByStops != null && departuresByStops.size() != 0) {
-            /*
-            if (mNumBanner != 0) {
-              //busSchedules = mAdapter.getBusSchedules();
-            }
-            String busStopName;
-            ArrayList<Integer> headerPosition = new ArrayList<>();
-            int numStopIds = savedStopIds.size();
-            for (int i = 0; i < numStopIds; i++) {
-              if (mNumBanner < numStopIds) {
-                mNumBanner++;
-                busStopName = savedStopNames.get(i);
-                busSchedules.addBusName(busStopName);
-                headerPosition.add(busSchedules.getBusNameList().size() - 1);
-                busSchedules.addBusStopInfo(new BusInfo(savedStopIds.get(i), savedStopCodes.get(i)));
-                UtilSort.sortDeparturesByBus2(
-                  busStopName,
-                  busSchedules,
-                  departuresByStops.get(i).getDepartures(),
-                  bannerIndex
-                );
-                //mAdapter.updateBusSchedules(busSchedules, headerPosition);
-              } else {
-                NotifyItemData itemData = UtilSort.sortDeparturesByBus3(
-                  busSchedules,
-                  departuresByStops.get(i).getDepartures(),
-                  bannerIndex.get(i));
-                //mAdapter.updateBusData(itemData);
-              }
-            }
-            //progressBar.setVisibility(GONE);
-            */
-          }
+      case SUCCESS:
+        mProgressBar.setVisibility(GONE);
+        if (response.mData != null) {
+          mAdapter.updateBusDepartures(response.mData);
         }
+        break;
 
-        @Override
-        public void onComplete() {
-
-        }
-
-        @Override
-        public void onError(Throwable e) {
-          e.printStackTrace();
-        }
-      }));
+      case ERROR:
+        mProgressBar.setVisibility(GONE);
+        response.mError.printStackTrace();
+        break;
+    }
   }
 
   @OnClick(R.id.edittext_search_bus_stops_dashboard)
@@ -348,27 +265,20 @@ public class DashboardFragment extends Fragment {
   @Override
   public void onStart() {
     super.onStart();
+    Log.d(TAG, "onStart has called.");
 
     if (mUid != null) {
       mDisposable.add(mViewModel.loadAllBusStopsByUid(mUid)
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(userSavedBusStops -> {
-            Log.d(TAG, "Load user saved bus stops successfully.");
             if (userSavedBusStops != null) {
+              Log.d(TAG, "Load user saved bus stops successfully.");
+              Log.d(TAG, "bus stops: " + userSavedBusStops.size());
               mNumUserSavedBusStops = userSavedBusStops.size();
               controlViewVisibility();
 
-              ArrayList<String> busStopId = new ArrayList<>();
-              ArrayList<String> busStopCode = new ArrayList<>();
-              ArrayList<String> busStopName = new ArrayList<>();
-              for (int i = 0; i < userSavedBusStops.size(); i++) {
-                busStopId.add(userSavedBusStops.get(i).getSavedStopId());
-                busStopCode.add(userSavedBusStops.get(i).getSavedStopCode());
-                busStopName.add(userSavedBusStops.get(i).getSavedStopName());
-              }
-
-              performGETBusDeparturesRequest(busStopId, busStopCode, busStopName);
+              mBusDepartureViewModel.loadUserFavoriteDepartures(userSavedBusStops);
             }
           },
           throwable -> Log.e(TAG, "Unable to load user saved bus stops", throwable)));
@@ -378,10 +288,21 @@ public class DashboardFragment extends Fragment {
   @Override
   public void onResume() {
     super.onResume();
+    Log.d(TAG, "onResume has called.");
 
     if (mConnectivityManager != null) {
       UtilConnection.isInternetConnected(mConnectivityManager, mInternetConnectedCallback, false);
     }
+  }
+
+  @Override
+  public void onStop() {
+    super.onStop();
+
+    // Log.d(TAG, "Item count : " + mAdapter.getItemCount());
+    mDisposable.clear();
+    mRecyclerview.onDetachedFromWindow();
+    mBusDepartureViewModel.dispose();
   }
 
   @Override

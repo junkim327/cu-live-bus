@@ -15,7 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.junyoung.uiucbus.MainTempActivity;
+import com.example.junyoung.uiucbus.MainActivity;
 import com.example.junyoung.uiucbus.R;
 
 import java.util.UUID;
@@ -107,7 +107,7 @@ public class LocationPermissionFragment extends Fragment {
     }
 
     if (getActivity() != null) {
-      Intent intent = new Intent(getActivity(), MainTempActivity.class);
+      Intent intent = new Intent(getActivity(), MainActivity.class);
       getActivity().startActivity(intent);
       getActivity().finish();
     }

@@ -20,14 +20,15 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.RecyclerviewClickListener;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapter.RecentPlaceAdapter;
 import com.example.junyoung.uiucbus.room.entity.UserPlace;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.PlaceViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.PlaceViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SharedItineraryViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -62,6 +63,7 @@ public class GoogleSearchFragment extends Fragment {
   private Unbinder mUnbinder;
   private PlaceViewModel mViewModel;
   private PlaceViewModelFactory mViewModelFactory;
+  private SharedItineraryViewModel mSharedItineraryViewModel;
   private ConnectivityManager mConnectivityManager;
   private RecentPlaceAdapter mAdapter;
   private LatLngBounds champaignUrbanaLatLngBounds;
@@ -132,6 +134,8 @@ public class GoogleSearchFragment extends Fragment {
 
     mViewModelFactory = Injection.providePlaceViewModelFactory(getContext());
     mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(PlaceViewModel.class);
+    mSharedItineraryViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedItineraryViewModel.class);
 
     LatLng champaignSouthWest = new LatLng(
       Double.valueOf(getString(R.string.champaign_south_west_lat)),
@@ -204,13 +208,6 @@ public class GoogleSearchFragment extends Fragment {
     }
   }
 
-  @Override
-  public void onStop() {
-    super.onStop();
-
-    mDisposable.clear();
-  }
-
   @OnClick(R.id.button_back_google_search)
   public void backToPreviousStack() {
     if (getFragmentManager() != null) {
@@ -279,6 +276,7 @@ public class GoogleSearchFragment extends Fragment {
 
     if (place != null) {
       insertPlaceInDatabase(place);
+
       String placeName = place.getName().toString();
       LatLng placeLatLng = place.getLatLng();
       onActivityResultCallback.onActivityResultExecuted(placeName, placeLatLng, hint);
@@ -297,16 +295,21 @@ public class GoogleSearchFragment extends Fragment {
 
   private void insertPlaceInDatabase(Place place) {
     if (mUid == null) {
-      createUid();
+      LatLng placeLatLng = place.getLatLng();
+      mDisposable.add(mViewModel.insertPlace(mUid, placeLatLng.latitude, placeLatLng.longitude,
+        place.getName().toString())
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(() -> Log.i(TAG, "Place is successfully stored in the database."),
+          throwable -> Log.e(TAG, "Unable to insert place :(", throwable)));
     }
+  }
 
-    LatLng placeLatLng = place.getLatLng();
-    mDisposable.add(mViewModel.insertPlace(mUid, placeLatLng.latitude, placeLatLng.longitude,
-      place.getName().toString())
-    .subscribeOn(Schedulers.io())
-    .observeOn(AndroidSchedulers.mainThread())
-    .subscribe(() -> Log.i(TAG, "Place is successfully stored in the database."),
-      throwable -> Log.e(TAG, "Unable to insert place :(", throwable)));
+  @Override
+  public void onStop() {
+    super.onStop();
+
+    mDisposable.clear();
   }
 
   @Override

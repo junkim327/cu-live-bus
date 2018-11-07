@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -29,9 +31,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.junyoung.uiucbus.Constants;
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.RecyclerviewClickListener;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapter.BusStopsAdapter;
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
 import com.example.junyoung.uiucbus.httpclient.pojos.BusStops;
@@ -41,7 +43,7 @@ import com.example.junyoung.uiucbus.room.entity.StopPoint;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.UserSearchedBusStopViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedStopPointViewModel;
-import com.example.junyoung.uiucbus.ui.viewmodel.UserSearchedBusStopViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SearchedBusStopViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import java.util.ArrayList;
@@ -71,9 +73,9 @@ public class BusStopSearchFragment extends Fragment {
   private Unbinder mUnbinder;
   private SearchView mSearchView;
   private ConnectivityManager mConnectivityManager;
-  private SharedStopPointViewModel mSharedStopPointViewModel;
-  private UserSearchedBusStopViewModel mViewModel;
+  private SearchedBusStopViewModel mViewModel;
   private UserSearchedBusStopViewModelFactory mViewModelFactory;
+  private SharedStopPointViewModel mSharedStopPointViewModel;
   private OnBusStopSelectedListener mBusStopSelectedCallback;
   private OnInternetConnectedListener mInternetConnectedCallback;
   private final CompositeDisposable mDisposable = new CompositeDisposable();
@@ -204,7 +206,7 @@ public class BusStopSearchFragment extends Fragment {
 
     mViewModelFactory = Injection.provideUserSearchedBusStopViewModelFactory(getContext());
     mViewModel = ViewModelProviders.of(this, mViewModelFactory)
-      .get(UserSearchedBusStopViewModel.class);
+      .get(SearchedBusStopViewModel.class);
 
     mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
       .get(SharedStopPointViewModel.class);
@@ -331,9 +333,25 @@ public class BusStopSearchFragment extends Fragment {
   }
 
   @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == android.R.id.home) {
+      FragmentManager fm = getFragmentManager();
+      if (fm.getBackStackEntryCount() > 0) {
+        fm.popBackStack();
+      }
+      return true;
+    }
+
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
   public void onDestroyView() {
     super.onDestroyView();
 
-    mUnbinder.unbind();
+    if (mUnbinder != null) {
+      mUnbinder.unbind();
+      mUnbinder = null;
+    }
   }
 }

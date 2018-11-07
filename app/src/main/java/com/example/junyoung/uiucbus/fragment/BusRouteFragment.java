@@ -24,8 +24,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.junyoung.uiucbus.DeviceDimensionsHelper;
-import com.example.junyoung.uiucbus.OnHomeItemClickedListener;
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.util.listener.OnHomeItemClickedListener;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.RouteItemDecoration;
 import com.example.junyoung.uiucbus.adapter.BusRouteAdapter;
@@ -58,12 +58,16 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
+
 public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
   GoogleMap.OnMarkerClickListener {
   private static final String TAG = BusRouteFragment.class.getSimpleName();
 
   private String mRouteColor;
   private boolean mIsInternetConnected;
+  private LatLng mBusLocation;
 
   private MenuItem mMapMenuItem;
 
@@ -153,10 +157,7 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       view = inflater.inflate(R.layout.activity_bus_routes, container, false);
       mUnbinder = ButterKnife.bind(this, view);
 
-      SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-        .findFragmentById(R.id.map_bus_route);
-      mapFragment.getMapAsync(this);
-
+      loadMapFragment();
       setToolbar();
       setRecyclerView();
       mBottomSheetBehavior = BottomSheetBehavior.from(mRecyclerView);
@@ -167,6 +168,15 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     }
 
     return view;
+  }
+
+  private void loadMapFragment() {
+    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+      .findFragmentById(R.id.map_bus_route);
+    mapFragment.getMapAsync(this);
+    if (mapFragment.getView() != null) {
+      mapFragment.getView().setVisibility(INVISIBLE);
+    }
   }
 
   private void setToolbar() {
@@ -237,6 +247,9 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
           if (bound != null) {
             Log.d(TAG, "onMapLoaded has called");
             mMap.setLatLngBoundsForCameraTarget(bound);
+            if (mBusLocation != null) {
+              mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mBusLocation, 15));
+            }
           }
         });
       }
@@ -288,10 +301,19 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
         options.rotation(90);
       }
 
+      mBusLocation = new LatLng(busLocation.getLat(), busLocation.getLon());
+
       mMap.addMarker(options);
-      mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(busLocation.getLat(),
-        busLocation.getLon()), 15));
     }
+
+    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+      .findFragmentById(R.id.map_bus_route);
+    if (mapFragment.getView() != null) {
+      mapFragment.getView().setVisibility(VISIBLE);
+    }
+
+    Log.d(TAG, "Finish drawing bus marker.");
+
   }
 
   private LatLngBounds drawPolyline(List<Shape> shapeList) {

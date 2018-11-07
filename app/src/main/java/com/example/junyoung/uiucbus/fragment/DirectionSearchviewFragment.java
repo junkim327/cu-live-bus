@@ -2,13 +2,13 @@ package com.example.junyoung.uiucbus.fragment;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,21 +18,19 @@ import android.widget.ImageButton;
 import android.widget.ProgressBar;
 
 import com.example.junyoung.uiucbus.Constants;
-import com.example.junyoung.uiucbus.MainActivity;
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.ui.viewmodel.SharedDirectionInfoViewModel;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
 import com.example.junyoung.uiucbus.httpclient.RetrofitBuilder;
 import com.example.junyoung.uiucbus.httpclient.services.PlannedTripsServices;
-import com.example.junyoung.uiucbus.httpclient.pojos.Itinerary;
 import com.example.junyoung.uiucbus.httpclient.pojos.PlannedTrips;
 import com.example.junyoung.uiucbus.room.entity.RouteInfo;
 import com.example.junyoung.uiucbus.ui.factory.DirectionViewModelFactory;
 import com.example.junyoung.uiucbus.ui.Injection;
-import com.example.junyoung.uiucbus.ui.viewmodel.RouteInfoViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.DirectionInfoViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SharedItineraryViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 import com.google.android.gms.maps.model.LatLng;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -59,6 +57,7 @@ public class DirectionSearchviewFragment extends Fragment {
   private LatLng placeLatLng;
   private Boolean isTopEditText;
   private Boolean isFirstCreated;
+  private Boolean mIsInternetConnected = true;
 
   private String mUid;
   private String mOriginLat;
@@ -69,41 +68,36 @@ public class DirectionSearchviewFragment extends Fragment {
   private Unbinder unbinder;
   private Disposable disposable;
   private ConnectivityManager mConnectivityManager;
+
+  // Callbacks
   private OnInternetConnectedListener mInternetConnectedCallback;
-  private onEditTextClickListener editTextCallback;
-  private onDataRetrievedListener dataRetrievedCallback;
+  private onEditTextClickListener mEditTextCallback;
+  private onDataRetrievedListener mDataRetrievedCallback;
+
+  // View models
   private DirectionViewModelFactory mViewModelFactory;
-  private RouteInfoViewModel mViewModel;
+  private DirectionInfoViewModel mViewModel;
+  private SharedItineraryViewModel mSharedItinararyViewModel;
+  private SharedDirectionInfoViewModel mSharedDirectionInfoViewModel;
   private final CompositeDisposable mDisposable = new CompositeDisposable();
 
   @BindView(R.id.image_button_exit_set_search_locations)
-  ImageButton exitImageButton;
+  ImageButton mExitImageButton;
   @BindView(R.id.edittext_top_side_set_search_locations)
-  EditText topSideEditText;
+  EditText mTopSideEditText;
   @BindView(R.id.edittext_bottom_side_set_search_locations)
-  EditText bottomSideEditText;
+  EditText mBottomSideEditText;
   @BindView(R.id.image_button_reverse_set_search_locations)
-  ImageButton reversebutton;
+  ImageButton mReverseButton;
   @BindView(R.id.progressbar_set_search_location)
-  ProgressBar progressBar;
+  ProgressBar mProgressBar;
 
   public interface onEditTextClickListener {
     public void onEditTextClick(boolean isTopEditText, String hint);
   }
 
   public interface onDataRetrievedListener {
-    public void onDataRetrieved(ArrayList<Itinerary> itineraries);
-  }
-
-  public static DirectionSearchviewFragment newInstance(String placeName,
-                                                        boolean isTopEditText) {
-    DirectionSearchviewFragment searchviewFragment = new DirectionSearchviewFragment();
-    Bundle args = new Bundle();
-    args.putString(EXTRA_PLACENAME, placeName);
-    args.putBoolean(EXTRA_ISTOPEDITTEXT, isTopEditText);
-    searchviewFragment.setArguments(args);
-
-    return searchviewFragment;
+    public void onDataRetrieved();
   }
 
   @Override
@@ -114,18 +108,18 @@ public class DirectionSearchviewFragment extends Fragment {
       mInternetConnectedCallback = (OnInternetConnectedListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
-        + " must implement OnRecentDirectionClickListener.");
+        + " must implement OnInternetConnectedListener.");
     }
 
     try {
-      editTextCallback = (onEditTextClickListener) context;
+      mEditTextCallback = (onEditTextClickListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
         + " must implement onEditTextClickListener");
     }
 
     try {
-      dataRetrievedCallback = (onDataRetrievedListener) context;
+      mDataRetrievedCallback = (onDataRetrievedListener) context;
     } catch (ClassCastException e) {
       throw new ClassCastException(context.toString()
         + " must implement onDataRetrievedListener");
@@ -140,11 +134,6 @@ public class DirectionSearchviewFragment extends Fragment {
       Context.CONNECTIVITY_SERVICE
     );
 
-    if (getArguments() != null) {
-      isTopEditText = getArguments().getBoolean(EXTRA_ISTOPEDITTEXT);
-      placeName = getArguments().getString(EXTRA_PLACENAME);
-    }
-
     SharedPreferences sharedPref = getActivity().getSharedPreferences(
       getString(R.string.preference_file_key), Context.MODE_PRIVATE
     );
@@ -153,37 +142,45 @@ public class DirectionSearchviewFragment extends Fragment {
     mUid = sharedPref.getString(getString(R.string.saved_uid), null);
 
     mViewModelFactory = Injection.provideDirectionViewModelFactory(getContext());
-    mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(RouteInfoViewModel.class);
+    mViewModel = ViewModelProviders.of(this, mViewModelFactory).get(DirectionInfoViewModel.class);
   }
 
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                            @Nullable Bundle savedInstanceState) {
-    View view = inflater.inflate(R.layout.fragment_direction_searchview, container, false);
-    unbinder = ButterKnife.bind(this, view);
+    if (mConnectivityManager != null) {
+      mIsInternetConnected = UtilConnection.isInternetConnected(mConnectivityManager,
+        mInternetConnectedCallback, true);
+    }
 
-    // TAG : 1 for origin, 2 for destination
-    topSideEditText.setTag(1);
-    topSideEditText.setEnabled(true);
-    topSideEditText.setFocusable(false);
-    bottomSideEditText.setTag(2);
-    bottomSideEditText.setEnabled(true);
-    bottomSideEditText.setFocusable(false);
+    View view = null;
+    if (mIsInternetConnected) {
+      view = inflater.inflate(R.layout.fragment_direction_searchview, container, false);
+      unbinder = ButterKnife.bind(this, view);
+
+      // TAG : 1 for origin, 2 for destination
+      mTopSideEditText.setTag(1);
+      mTopSideEditText.setEnabled(true);
+      mTopSideEditText.setFocusable(false);
+      mBottomSideEditText.setTag(2);
+      mBottomSideEditText.setEnabled(true);
+      mBottomSideEditText.setFocusable(false);
+    }
 
     return view;
   }
 
   @OnClick(R.id.image_button_reverse_set_search_locations)
   public void reversePoint() {
-    int tag = (int) topSideEditText.getTag();
-    topSideEditText.setTag(bottomSideEditText.getTag());
-    bottomSideEditText.setTag(tag);
+    int tag = (int) mTopSideEditText.getTag();
+    mTopSideEditText.setTag(mBottomSideEditText.getTag());
+    mBottomSideEditText.setTag(tag);
 
-    String topSideEditTextContent = topSideEditText.getText().toString();
-    String bottomSideEditTextContent = bottomSideEditText.getText().toString();
-    topSideEditText.setText(bottomSideEditTextContent);
-    bottomSideEditText.setText(topSideEditTextContent);
+    String topSideEditTextContent = mTopSideEditText.getText().toString();
+    String bottomSideEditTextContent = mBottomSideEditText.getText().toString();
+    mTopSideEditText.setText(bottomSideEditTextContent);
+    mBottomSideEditText.setText(topSideEditTextContent);
 
     if (!topSideEditTextContent.contentEquals("") && !bottomSideEditTextContent.equals("")) {
       String tempLat = mOriginLat;
@@ -197,33 +194,44 @@ public class DirectionSearchviewFragment extends Fragment {
     }
   }
 
+  @Override
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+
+    mSharedItinararyViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedItineraryViewModel.class);
+    mSharedDirectionInfoViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedDirectionInfoViewModel.class);
+  }
+
   @OnClick(R.id.image_button_exit_set_search_locations)
   public void exitActivity() {
-    Intent intent = new Intent(getActivity(), MainActivity.class);
-    startActivity(intent);
+    if (getActivity() != null) {
+      NavUtils.navigateUpFromSameTask(getActivity());
+    }
   }
 
   @OnClick({ R.id.edittext_top_side_set_search_locations,
     R.id.edittext_bottom_side_set_search_locations })
   public void startPlaceAutocompleteIntent(EditText editText) {
     if (editText.getId() == R.id.edittext_top_side_set_search_locations) {
-      editTextCallback.onEditTextClick(true, topSideEditText.getHint().toString());
+      mEditTextCallback.onEditTextClick(true, mTopSideEditText.getHint().toString());
     } else {
-      editTextCallback.onEditTextClick(false, bottomSideEditText.getHint().toString());
+      mEditTextCallback.onEditTextClick(false, mBottomSideEditText.getHint().toString());
     }
   }
 
   public void updatePlaceName(String placeName, boolean isTopEditText) {
     if (isTopEditText) {
-      topSideEditText.setText(placeName);
+      mTopSideEditText.setText(placeName);
     } else {
-      bottomSideEditText.setText(placeName);
+      mBottomSideEditText.setText(placeName);
     }
   }
 
   public void updatePlaceLatLng(LatLng placeLatLng, boolean isTopEditText) {
     if (isTopEditText) {
-      if (topSideEditText.getHint().toString().equals(
+      if (mTopSideEditText.getHint().toString().equals(
         getResources().getString(R.string.edittext_enter_starting_point_hint)
       )) {
         mOriginLat = String.valueOf(placeLatLng.latitude);
@@ -233,7 +241,7 @@ public class DirectionSearchviewFragment extends Fragment {
         mDestinationLat = String.valueOf(placeLatLng.longitude);
       }
     } else {
-      if (bottomSideEditText.getHint().toString().equals(
+      if (mBottomSideEditText.getHint().toString().equals(
         getResources().getString(R.string.edittext_enter_starting_point_hint)
       )) {
         mOriginLat = String.valueOf(placeLatLng.latitude);
@@ -250,17 +258,19 @@ public class DirectionSearchviewFragment extends Fragment {
   }
 
   private void getPlannedTrips() {
-    boolean isConnected = true;
     if (mConnectivityManager != null) {
-      isConnected = UtilConnection.isInternetConnected(mConnectivityManager,
+      mIsInternetConnected = UtilConnection.isInternetConnected(mConnectivityManager,
         mInternetConnectedCallback, true);
     }
 
-    if (isConnected) {
-      progressBar.setVisibility(VISIBLE);
+    if (mIsInternetConnected) {
+      mProgressBar.setVisibility(VISIBLE);
 
-      String startingPointName = topSideEditText.getText().toString();
-      String destinationName = bottomSideEditText.getText().toString();
+      String startingPointName = mTopSideEditText.getText().toString();
+      String destinationName = mBottomSideEditText.getText().toString();
+
+      mSharedDirectionInfoViewModel.select(new RouteInfo(mOriginLat, mOriginLon,
+        startingPointName, mDestinationLat, mDestinationLon, destinationName));
 
       mDisposable.add(mViewModel.insertRouteInfo(mUid, mOriginLat, mOriginLon, startingPointName,
         mDestinationLat, mDestinationLon, destinationName)
@@ -281,9 +291,10 @@ public class DirectionSearchviewFragment extends Fragment {
         .subscribeWith(new DisposableSingleObserver<PlannedTrips>() {
           @Override
           public void onSuccess(PlannedTrips plannedTrips) {
-            progressBar.setVisibility(GONE);
+            mProgressBar.setVisibility(GONE);
             if (plannedTrips != null) {
-              dataRetrievedCallback.onDataRetrieved(plannedTrips.getItineraries());
+              mSharedItinararyViewModel.select(plannedTrips.getItineraries());
+              mDataRetrievedCallback.onDataRetrieved();
               Log.d("Data Retrieved", " : Finished");
             }
           }
@@ -302,8 +313,8 @@ public class DirectionSearchviewFragment extends Fragment {
     mOriginLon = directionInfo.getOriginLon();
     mDestinationLat = directionInfo.getDestinationLat();
     mDestinationLon = directionInfo.getDestinationLon();
-    topSideEditText.setText(directionInfo.getStartingPointName());
-    bottomSideEditText.setText(directionInfo.getDestinationName());
+    mTopSideEditText.setText(directionInfo.getStartingPointName());
+    mBottomSideEditText.setText(directionInfo.getDestinationName());
     getPlannedTrips();
   }
 

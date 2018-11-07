@@ -3,7 +3,6 @@ package com.example.junyoung.uiucbus.fragment;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
@@ -34,22 +33,23 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.example.junyoung.uiucbus.OnHomeItemClickedListener;
-import com.example.junyoung.uiucbus.OnInternetConnectedListener;
+import com.example.junyoung.uiucbus.util.listener.OnHomeItemClickedListener;
+import com.example.junyoung.uiucbus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.uiucbus.R;
-import com.example.junyoung.uiucbus.RecyclerviewClickListener;
+import com.example.junyoung.uiucbus.util.listener.RecyclerviewClickListener;
 import com.example.junyoung.uiucbus.adapter.BusDeparturesAdapter;
 import com.example.junyoung.uiucbus.httpclient.pojos.SortedDeparture;
 import com.example.junyoung.uiucbus.room.entity.StopPoint;
 import com.example.junyoung.uiucbus.ui.Injection;
 import com.example.junyoung.uiucbus.ui.factory.UserSavedBusStopViewModelFactory;
 import com.example.junyoung.uiucbus.ui.viewmodel.BusDeparturesViewModel;
+import com.example.junyoung.uiucbus.ui.viewmodel.SavedBusStopViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedDepartureViewModel;
 import com.example.junyoung.uiucbus.ui.viewmodel.SharedStopPointViewModel;
-import com.example.junyoung.uiucbus.ui.viewmodel.UserSavedBusStopViewModel;
 import com.example.junyoung.uiucbus.util.UtilConnection;
 
 import java.util.List;
+import java.util.Random;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -58,7 +58,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
+import static android.view.View.GONE;
 import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
 
 public class BusDeparturesFragment extends Fragment
   implements ToggleButton.OnCheckedChangeListener {
@@ -79,7 +81,7 @@ public class BusDeparturesFragment extends Fragment
   private BusDeparturesViewModel mBusDeparturesViewModel;
   private SharedDepartureViewModel mSharedDepartureViewModel;
   private SharedStopPointViewModel mSharedStopPointViewModel;
-  private UserSavedBusStopViewModel mUserSavedBusStopViewModel;
+  private SavedBusStopViewModel mSavedBusStopViewModel;
   private UserSavedBusStopViewModelFactory mUserSavedBusStopViewModelFactory;
   private CompositeDisposable mDisposable = new CompositeDisposable();
 
@@ -95,10 +97,10 @@ public class BusDeparturesFragment extends Fragment
   TextView mBusStopCodeTextView;
   @BindView(R.id.progressbar_bus_departures)
   ProgressBar mProgressBar;
+  @BindView(R.id.text_no_departures_bus_departures)
+  TextView mNoDeparturesTextView;
   @BindView(R.id.recycler_view_bus_departures)
   RecyclerView mRecyclerView;
-  @BindView(R.id.floating_action_button_bus_departures)
-  FloatingActionButton floatingActionButton;
   @BindView(R.id.toggle_button_bus_departures)
   ToggleButton mAddFavoriteButton;
   @BindView(R.id.image_unselected_button_bus_departures)
@@ -167,7 +169,7 @@ public class BusDeparturesFragment extends Fragment
 
     View view = null;
     if (isInternetConnected) {
-      view = inflater.inflate(R.layout.activity_bus_departures, container, false);
+      view = inflater.inflate(R.layout.fragment_bus_departures, container, false);
       mUnbinder = ButterKnife.bind(this, view);
 
       if (mNumSavedBusStops == MAX_NUM_SAVED_STOPS) {
@@ -276,7 +278,7 @@ public class BusDeparturesFragment extends Fragment
   public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
     if (isChecked) {
       if (mStopPoint != null) {
-        mDisposable.add(mUserSavedBusStopViewModel.insertBusStop(mUid, mStopPoint.getStopId(),
+        mDisposable.add(mSavedBusStopViewModel.insertBusStop(mUid, mStopPoint.getStopId(),
           mStopPoint.getStopCode(), mStopPoint.getStopName())
           .subscribeOn(Schedulers.io())
           .observeOn(AndroidSchedulers.mainThread())
@@ -289,7 +291,7 @@ public class BusDeparturesFragment extends Fragment
       }
     } else {
       if (mStopPoint != null) {
-        mDisposable.add(mUserSavedBusStopViewModel.deleteBusStopByUidAndStopId(mUid,
+        mDisposable.add(mSavedBusStopViewModel.deleteBusStopByUidAndStopId(mUid,
           mStopPoint.getStopId())
           .subscribeOn(Schedulers.io())
           .observeOn(AndroidSchedulers.mainThread())
@@ -316,11 +318,11 @@ public class BusDeparturesFragment extends Fragment
 
     mUserSavedBusStopViewModelFactory =
       Injection.provideUserSavedBusStopViewModelFactory(getContext());
-    mUserSavedBusStopViewModel = ViewModelProviders.of(this, mUserSavedBusStopViewModelFactory)
-      .get(UserSavedBusStopViewModel.class);
+    mSavedBusStopViewModel = ViewModelProviders.of(this, mUserSavedBusStopViewModelFactory)
+      .get(SavedBusStopViewModel.class);
 
     if (mUid != null && mStopPoint != null) {
-      mDisposable.add(mUserSavedBusStopViewModel.getNumBusStopsByUid(mUid, mStopPoint.getStopId())
+      mDisposable.add(mSavedBusStopViewModel.getNumBusStopsByUid(mUid, mStopPoint.getStopId())
         .subscribeOn(Schedulers.io())
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(numBusStops -> {
@@ -341,11 +343,40 @@ public class BusDeparturesFragment extends Fragment
     mBusDeparturesViewModel.getSortedDepartureList().observe(this, sortedDepartureList -> {
       mProgressBar.setVisibility(INVISIBLE);
       if (sortedDepartureList != null) {
-        Log.d(TAG, "Size: " + sortedDepartureList.size());
+        Log.d(TAG, "Update sortedDepartureList, Size: " + sortedDepartureList.size());
         mSize = sortedDepartureList.size();
-        mAdapter.updateDepartureList(sortedDepartureList);
+        if (mSize == 0) {
+          showNoDeparturesMessage();
+        } else {
+          if (mRecyclerView.getVisibility() == GONE) {
+            mNoDeparturesTextView.setVisibility(GONE);
+            mRecyclerView.setVisibility(VISIBLE);
+          }
+          mAdapter.updateDepartureList(sortedDepartureList);
+        }
       }
     });
+  }
+
+  private void showNoDeparturesMessage() {
+    Random random = new Random();
+    int max = 3;
+    int min = 1;
+    int generatedNum = random.nextInt(max - min + 1) + min;
+    if (generatedNum == 1) {
+      mNoDeparturesTextView.setText(getResources().getText(
+        R.string.message_when_no_departures_one));
+    } else if (generatedNum == 2) {
+      mNoDeparturesTextView.setText(getResources().getText(
+        R.string.message_when_no_departures_two
+      ));
+    } else {
+      mNoDeparturesTextView.setText(getResources().getText(
+        R.string.message_when_no_departures_three
+      ));
+    }
+    mRecyclerView.setVisibility(GONE);
+    mNoDeparturesTextView.setVisibility(VISIBLE);
   }
 
   @Override
