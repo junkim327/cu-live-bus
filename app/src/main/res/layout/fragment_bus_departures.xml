@@ -6,38 +6,41 @@
     android:layout_height="match_parent"
     android:background="@color/constraint_layout_background_color">
 
-    <ImageView
-        android:id="@+id/imageView5"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_gravity="center_vertical|center"
-        android:layout_marginTop="120dp"
+    <TextView
+        android:id="@+id/text_no_departures_bus_departures"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="126dp"
+        android:fontFamily="@font/oxygen_bold"
+        android:maxLines="2"
+        android:text="@string/empty_string"
+        android:textAlignment="center"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
         android:visibility="gone"
-        app:srcCompat="@drawable/no_transit_route_image" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view_bus_departures"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:layoutAnimation="@anim/layout_animation_fall_down_medium"
         android:paddingBottom="48dp"
         android:scrollbars="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
     </android.support.v7.widget.RecyclerView>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floating_action_button_bus_departures"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:clickable="true"
-        android:visibility="gone"
-        app:backgroundTint="@color/toolbar_color"
-        app:elevation="6dp"
-        app:fabSize="mini"
-        app:srcCompat="@drawable/ic_refresh" />
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar_layout_bus_departures"
