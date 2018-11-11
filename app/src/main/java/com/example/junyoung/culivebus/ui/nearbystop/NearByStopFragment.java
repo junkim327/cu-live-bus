@@ -9,7 +9,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
+import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
@@ -55,6 +58,7 @@ import butterknife.OnClick;
 import butterknife.Unbinder;
 
 import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
+import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
 
 public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   GoogleMap.OnCameraIdleListener,
@@ -72,6 +76,7 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
 
   private GoogleMap mMap;
   private Unbinder mUnbinder;
+  private Snackbar mSnackbar;
   private ConnectivityManager mConnectivityManager;
   private BottomSheetBehavior mBottomSheetBehavior;
 
@@ -83,6 +88,8 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   private OnBusStopClickedListener mOnBusStopClickedCallback;
   private OnInternetConnectedListener mInternetConnectedCallback;
 
+  @BindView(R.id.coordinator_layout_near_by_stop)
+  CoordinatorLayout mCoordinatorLayout;
   @BindView(R.id.toolbar_near_by_stop)
   Toolbar mToolbar;
 
@@ -259,10 +266,13 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
     switch (response.mStatus) {
       case SUCCESS:
         if (response.mData != null) {
+          Log.d(TAG, "SUCCESS");
           createBusStopMarkers(response.mData);
         }
         break;
       case ERROR:
+        showErrorMessage();
+        response.mError.printStackTrace();
         break;
     }
   }
@@ -293,6 +303,27 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
       fragmentTransaction.show(mapFragment);
       fragmentTransaction.commit();
     }*/
+  }
+
+  private void showErrorMessage() {
+    if (mSnackbar == null) {
+      mSnackbar = Snackbar.make(mCoordinatorLayout, R.string.snack_bar_network_error_message,
+        Snackbar.LENGTH_INDEFINITE)
+        .setAction("RETRY", view -> {
+          if (mMap != null) {
+            LatLng cameraPosition = mMap.getCameraPosition().target;
+            mBusStopViewModel.loadNearBusStopList(
+              String.valueOf(cameraPosition.latitude),
+              String.valueOf(cameraPosition.longitude)
+            );
+          }
+        });
+    }
+
+    if (mBottomSheetBehavior.getState() == STATE_EXPANDED) {
+      mBottomSheetBehavior.setState(STATE_COLLAPSED);
+    }
+    mSnackbar.show();
   }
 
   @Override
@@ -345,6 +376,9 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
       mBusStopCodeTextView.setText(selectedStopPoint.getStopCode());
     }
 
+    if (mSnackbar != null && mSnackbar.isShown()) {
+      mSnackbar.dismiss();
+    }
     mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
     return false;
