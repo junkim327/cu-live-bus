@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/constraint_layout_background_color">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_bus_routes"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/toolbar_gradient_background_color"
+        android:elevation="4dp"
+        android:minHeight="48dp">
+
+    </android.support.v7.widget.Toolbar>
+
+    <fragment
+        android:id="@+id/map_bus_route"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view_bus_routes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:translationZ="4dp"
+        app:layout_behavior="@string/bottom_sheet_behavior"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/image_drag_card_bottom_sheet_header">
+
+    </android.support.v7.widget.RecyclerView>
+
+    <include
+        android:id="@+id/constraint_layout_bus_stop_info_bus_routes"
+        layout="@layout/card_bus_stop_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="gone" />
+
+</android.support.design.widget.CoordinatorLayout>

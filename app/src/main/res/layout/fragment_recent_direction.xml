@@ -16,7 +16,7 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/header_recent_direction"
+            android:id="@+id/text_header_recent_direction"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
@@ -29,7 +29,8 @@
             android:text="@string/recent_direction_header"
             android:textAlignment="viewStart"
             android:textColor="@android:color/black"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:visibility="invisible" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recyclerview_recent_direction"

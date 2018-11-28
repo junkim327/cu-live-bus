@@ -1,31 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
-    android:background="@drawable/banner_card_layout"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_corner"
     android:elevation="4dp">
 
     <TextView
         android:id="@+id/text_header_main_view_item"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="16dp"
-        android:fontFamily="@font/roboto"
+        android:fontFamily="@font/oxygen_bold"
         android:text="Nearby stops"
         android:textColor="@android:color/black"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/text_sub_header_main_view_item"
+        app:layout_constraintStart_toEndOf="@+id/image_icon_main_view_item"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="spread_inside" />
 
     <TextView
         android:id="@+id/text_sub_header_main_view_item"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/text_header_main_view_item"
         android:layout_below="@+id/text_header_main_view_item"
-        android:layout_marginBottom="16dp"
+        android:layout_alignStart="@+id/text_header_main_view_item"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:fontFamily="@font/roboto"
-        android:text="Please agree to our Location Services Policy." />
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        android:fontFamily="@font/oxygen"
+        android:text="Please agree to our Location Services Policy."
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/image_icon_main_view_item"
+        app:layout_constraintTop_toBottomOf="@+id/text_header_main_view_item" />
 
-</RelativeLayout>
+    <ImageView
+        android:id="@+id/image_icon_main_view_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_bus_stop_color" />
+
+</android.support.constraint.ConstraintLayout>

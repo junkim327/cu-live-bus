@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="status_bar_height">24dp</dimen>
+    <dimen name="small_toolbar_height">40dp</dimen>
+    <dimen name="small_size_toolbar_height">48dp</dimen>
+    <dimen name="sublayout_bottom_sheet_planned_trip_results">154dp</dimen>
+    <dimen name="bus_stop_info_card_height">86dp</dimen>
+    <dimen name="bus_info_card_height">126dp</dimen>
+
+    <dimen name="icon_height_and_width">24dp</dimen>
+
+    <!-- Elevation -->
+        <dimen name="toolbar_elevation">4dp</dimen>
+    <!-- Elevation -->
+</resources>

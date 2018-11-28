@@ -24,19 +24,24 @@ import com.example.junyoung.culivebus.util.TimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class BusFavoriteDeparturesAdapter
   extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
   public static class BusStopHeaderViewHolder extends RecyclerView.ViewHolder {
     public ConstraintLayout card;
-    public TextView busStopNameTextView;
-    public TextView busStopCodeTextView;
+    @BindView(R.id.textview_bus_stop_name_bus_stop_header)
+    TextView busStopNameTextView;
+    @BindView(R.id.textview_bus_stop_code_bus_stop_header)
+    TextView busStopCodeTextView;
 
     public BusStopHeaderViewHolder(View itemView) {
       super(itemView);
 
+      ButterKnife.bind(this, itemView);
+
       card = (ConstraintLayout) itemView;
-      busStopNameTextView = itemView.findViewById(R.id.textview_bus_stop_name_bus_stop_header);
-      busStopCodeTextView = itemView.findViewById(R.id.textview_bus_stop_code_bus_stop_header);
     }
   }
 
@@ -141,11 +146,11 @@ public class BusFavoriteDeparturesAdapter
       long firstBusRemainingArrivalTime = TimeFormatter.getRemainingArrivalTime(
         departure.getExpectedList().get(0)) + MAGIC_NUMBER;
 
-      if (holder.timer != null) {
-        holder.timer.cancel();
-        holder.timer = null;
+      if (holder.mTimer != null) {
+        holder.mTimer.cancel();
+        holder.mTimer = null;
       }
-      holder.timer = new CountDownTimer(firstBusRemainingArrivalTime, DateUtils.SECOND_IN_MILLIS) {
+      holder.mTimer = new CountDownTimer(firstBusRemainingArrivalTime, DateUtils.SECOND_IN_MILLIS) {
         @Override
         public void onTick(long remainingMillis) {
           //Log.d("Timer", "Clock is ticking");
@@ -155,19 +160,15 @@ public class BusFavoriteDeparturesAdapter
             if (seconds % 5 == 0) {
               Log.d("Timer1", "Clock is ticking, possible memory leak");
             }
-            holder.mOneBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+            holder.mTicker1.setText(mContext.getString(
               R.string.bus_remaining_arrival_time,
               minutes,
               seconds
             ));
           } else if (remainingMillis > MAGIC_NUMBER) {
-            holder.mOneBusEstimatedArrivalTimeTextView.setText(mContext.getString(
-              R.string.bus_arrives_soon
-            ));
+            holder.mTicker1.setText(mContext.getString(R.string.bus_arrives_soon));
           } else {
-            holder.mOneBusEstimatedArrivalTimeTextView.setText(mContext.getString(
-              R.string.bus_arrived
-            ));
+            holder.mTicker1.setText(mContext.getString(R.string.bus_arrived));
           }
         }
 
@@ -181,11 +182,11 @@ public class BusFavoriteDeparturesAdapter
         long secondBusRemainingArrivalTime = TimeFormatter.getRemainingArrivalTime(
           departure.getExpectedList().get(1)) + MAGIC_NUMBER;
 
-        if (holder.timer2 != null) {
-          holder.timer2.cancel();
-          holder.timer2 = null;
+        if (holder.mTimer2 != null) {
+          holder.mTimer2.cancel();
+          holder.mTimer2 = null;
         }
-        holder.timer2 = new CountDownTimer(secondBusRemainingArrivalTime,
+        holder.mTimer2 = new CountDownTimer(secondBusRemainingArrivalTime,
           DateUtils.SECOND_IN_MILLIS) {
           @Override
           public void onTick(long remainingMillis) {
@@ -196,17 +197,17 @@ public class BusFavoriteDeparturesAdapter
               if (seconds % 5 == 0) {
                 //Log.d("Timer2", "Clock is ticking, possible memory leak");
               }
-              holder.mTwoBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+              holder.mTicker2.setText(mContext.getString(
                 R.string.bus_remaining_arrival_time,
                 minutes,
                 seconds
               ));
             } else if (remainingMillis > MAGIC_NUMBER) {
-              holder.mTwoBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+              holder.mTicker2.setText(mContext.getString(
                 R.string.bus_arrives_soon
               ));
             } else {
-              holder.mTwoBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+              holder.mTicker2.setText(mContext.getString(
                 R.string.bus_arrived
               ));
             }
@@ -238,11 +239,11 @@ public class BusFavoriteDeparturesAdapter
     super.onViewDetachedFromWindow(holder);
     if (holder instanceof BusDeparturesViewHolder) {
       Log.d(TAG, "Departure View Detached From Window at old position : ");
-      ((BusDeparturesViewHolder) holder).timer.cancel();
-      ((BusDeparturesViewHolder) holder).timer = null;
-      if (((BusDeparturesViewHolder) holder).timer2 != null) {
-        ((BusDeparturesViewHolder) holder).timer2.cancel();
-        ((BusDeparturesViewHolder) holder).timer2 = null;
+      ((BusDeparturesViewHolder) holder).mTimer.cancel();
+      ((BusDeparturesViewHolder) holder).mTimer = null;
+      if (((BusDeparturesViewHolder) holder).mTimer2 != null) {
+        ((BusDeparturesViewHolder) holder).mTimer2.cancel();
+        ((BusDeparturesViewHolder) holder).mTimer2 = null;
       }
     } else {
       Log.d(TAG, "View Detached From Window at position : " + holder.getAdapterPosition());
@@ -272,21 +273,21 @@ public class BusFavoriteDeparturesAdapter
       ViewGroup.LayoutParams.WRAP_CONTENT
     );
     layoutParams.setMargins(pixels, 0, pixels, 0);
-    busDeparturesVH.card.setLayoutParams(layoutParams);
+    busDeparturesVH.mCard.setLayoutParams(layoutParams);
   }
 
   private void setHeaderCardBackground(BusStopHeaderViewHolder holder, int position) {
     // TODO : Implement logic
     if (((position + 1) == mDepartureList.size()) || !mDepartureList.get(position + 1)
       .isBusDeparture())
-    holder.card.setBackground(ResourcesCompat.getDrawable(mContext.getResources(),
-      R.drawable.rounded_corner, null));
+      holder.card.setBackground(ResourcesCompat.getDrawable(mContext.getResources(),
+        R.drawable.rounded_corner, null));
   }
 
   private void setDepartureCardBackground(BusDeparturesViewHolder holder, int position) {
     if ((position + 1) == mDepartureList.size() || !mDepartureList.get(position + 1)
       .isBusDeparture()) {
-      holder.card.setBackground(ResourcesCompat.getDrawable(mContext.getResources(),
+      holder.mCard.setBackground(ResourcesCompat.getDrawable(mContext.getResources(),
         R.drawable.rounded_corner_at_bottom, null));
     }
   }

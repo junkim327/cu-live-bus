@@ -1,6 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+
+    <color name="statusbar_color">#1C7759</color>
+    <color name="toolbar_color">#2EC795</color>
+
+    <color name="searchview_color">#dedede</color>
+
+    <color name="colorPrimary">#2EC795</color>
+    <color name="colorPrimaryDark">#009567</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="white">#ffffff</color>
+    <color name="textMainColor">#de000000</color>
+    <color name="textSubColor">#99000000</color>
+    <color name="constraint_layout_background_color">#efefef</color>
+
+    <color name="collapsing_toolbar_scrim_background_color">#282622</color>
+    <color name="bottom_sheet_distance_textview_color">#f44242</color>
+
+    <color name="progressbar_color">#FFFFFF</color>
+    <color name="less_walking_text_color">#3087EB</color>
+
+    <color name="search_bar_hint_color">#CCFFFFFF</color>
+
+    <!-- card_bus_stop_header colors -->
+    <color name="bus_stop_banner_card_color">#282622</color>
+    <color name="text_bus_stop_banner_card_color">#FFFFFF</color>
+
+    <color name="temp_background_color">#1B1C42</color>
+    <color name="test_bg_color">#F2F2F2</color>
+
+    <color name="text_button_color">#0078D0</color>
+    <color name="toast_background_color">#5A5A5A</color>
+
+    <!-- Fragments -->
+        <!-- PlannedTripResultsWithMapFragment -->
+        <color name="google_map_dot_pattern_color">#0071D0</color>
+        <!-- PlannedTripResultsWithMapFragment -->
+    <!-- Fragments -->
+
+    <!-- Bottom Sheet -->
+        <!-- bottom_sheet_planned_trip_results_with_map -->
+        <color name="planned_trip_results_background_color">#F5F5F5</color>
+        <!-- bottom_sheet_planned_trip_results_with_map -->
+    <!-- Bottom Sheet -->
+    <!-- Cards -->
+
+    <!-- Cards -->
 </resources>

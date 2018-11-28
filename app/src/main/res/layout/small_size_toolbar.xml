@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
+    android:layout_height="@dimen/small_size_toolbar_height"
     android:background="@color/toolbar_color"
     android:elevation="4dp"
-    android:minHeight="48dp"
+    android:minHeight="@dimen/small_size_toolbar_height"
+    android:maxHeight="@dimen/small_size_toolbar_height"
     android:theme="?attr/actionBarTheme">
 
 </android.support.v7.widget.Toolbar>

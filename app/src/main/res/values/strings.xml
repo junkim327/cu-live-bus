@@ -1,3 +1,166 @@
 <resources>
-    <string name="app_name">uiucbus</string>
+    <string name="app_name">CU Live Bus</string>
+
+    <string name="empty_string" />
+
+    <string name="illini_union_latitude">40.109659</string>
+    <string name="illini_union_longitude">-88.227159</string>
+
+    <string name="bus_arrives_soon">Soon</string>
+    <string name="bus_arrived">Arrived</string>
+    <string name="no_info">No Info</string>
+
+    <!-- String for app bar -->
+    <string name="action_home">Home</string>
+    <string name="action_map">Map</string>
+
+    <!-- Color parser -->
+    <string name="hex_color">#%1$s</string>
+
+    <!-- Util -->
+    <string name="format_24hr">24hr</string>
+
+        <!-- Snackbar Message -->
+        <string name="snack_bar_network_error_message">The network connection flaked out</string>
+        <!-- Snackbar Message -->
+    <!-- Util -->
+
+    <!-- Adapter -->
+        <!-- BusDeparturesAdapter -->
+        <string name="bus_direction_info">To %1$s</string>
+        <string name="bus_remaining_arrival_time">%1$dm %2$ds</string>
+    
+    <!-- Adapter -->
+
+    <!-- Controller -->
+        <!-- FavoriteDeparturesController -->
+        <string name="header_id">Header%1$d</string>
+    <!-- Controller -->
+    
+    <!-- Activity -->
+        <!-- BusStopActivity -->
+        <string name="distance_from_the_stop">%1$gft</string>
+    <!-- Activity -->
+
+    <!-- DashboardFragment -->
+    <string name="search_view_hint">Search bus stops</string>
+    <string name="guidance_message_one_text">Add favorites and</string>
+    <string name="guidance_message_two_text">see real time info right away</string>
+    <string name="data_provider_text">Data provided by CUMTD</string>
+
+    <!-- BusDepartureActivity -->
+    <string name="unable_to_load_bus_departure_message">Sorry, we </string>
+
+    <!-- SettingActivity -->
+
+        <!-- Toolbar title -->
+        <string name="setting_toolbar_title">Setting</string>
+        <string name="setting_edit_favorites">Edit Favorites</string>
+
+        <!-- fragment_setting -->
+        <string name="header_user_setting">USER SETTING</string>
+        <string name="header_legal">LEGAL</string>
+
+    <!-- SettingActivity -->
+
+    <!-- Fragment -->
+
+        <!-- DashboardFragment -->
+        <string name="logo_content_description">Logo</string>
+        <string name="add_favorites_content_description">Add favorites</string>
+        <!-- DashboardFragment -->
+
+        <!-- NearByStopFragment -->
+        <string name="toolbar_title_near_by_stop_fragment">Nearby Stops</string>
+        <!-- NearByStopFragment -->
+
+        <!-- BusDeparturesFragment -->
+        <string name="message_when_no_departures_one">Nothing to see here.</string>
+        <string name="message_when_no_departures_two">Welcome to the void. There is nothing
+        here.</string>
+        <string name="message_when_no_departures_three">Tragically, nothing.</string>
+        <!-- BusDeparturesFragment -->
+
+        <!-- BusStopSearchFragment -->
+        <string name="recent_search_header_BusStopSearchFragment">Recent Search</string>
+        <string name="no_search_result_content_description_BusStopSearchFragment">
+            No search Result</string>
+        <string name="no_search_result_text_BusStopSearchFragment">No results</string>
+        <!-- BusStopSearchFragment -->
+
+        <!-- PlannedTripResultsWithMapFragment -->
+        <string name="walk_time">Walk %1$smin</string>
+        <string name="travel_time">%1$smin</string>
+        <!-- PlannedTripResultsWithMapFragment -->
+
+    <!-- Fragment -->
+
+    <!-- String for search view -->
+    <string name="search_hint">Search bus stop</string>
+
+    <string name="preference_file_key">com.example.junyoung.uiucbus.PREFERENCE_FILE_KEY</string>
+    <string name="saved_uid">com.example.junyoung.uiucbus.SAVED_UID</string>
+    <string name="saved_bus_stops">com.example.junyoung.uiucbus.SAVED_BUS_STOPS</string>
+    <string name="saved_stop_ids">com.example.junyoung.uiucbus.SAVED_STOP_IDS</string>
+    <string name="saved_stop_codes">com.example.junyoung.uiucbus.SAVED_STOP_CODES</string>
+    <string name="saved_stop_names">com.example.junyoung.uiucbus.SAVED_STOP_NAMES</string>
+    <string name="saved_user_location_permission">
+        com.example.junyoung.uiucbus.SAVED_USER_PERMISSION_CODE</string>
+    <string name="edit_home_menu_title">Edit</string>
+
+    <!-- String for DirectionSearchviewFragment -->
+    <string name="edittext_enter_destination_hint">Enter destination</string>
+    <string name="edittext_enter_starting_point_hint">Enter starting point</string>
+
+    <!-- String TripInfoAdapter -->
+    <string name="type_service">Service</string>
+    <string name="type_walk">Walk</string>
+
+    <!-- String for fragment_google_search.xml -->
+    <string name="imagebutton_content_description_fragment_google_search">Search userPlace</string>
+    <string name="current_location_button_text_fragment_google_search">Current location</string>
+    <string name="choose_on_map_button_text_fragment_google_search">Choose on map</string>
+
+    <!-- Email intent: Email address and Subject -->
+    <string name="email_address">junkim327@gmail.com</string>
+    <string name="subject">Feedback 1.0.1 Android</string>
+
+    <!-- NoInternetConnectionFragment -->
+    <string name="no_wifi_image_content_description">No internet connection!</string>
+    <!-- message when connection is lost -->
+    <string name="no_internet_connection_message_one">You\'re offline</string>
+    <string name="no_internet_connection_message_two">Please connect to the internet and\u0020</string>
+    <string name="no_internet_connection_message_three">try again</string>
+
+    <!-- EditFavoriteFragment -->
+    <string name="ok">OK</string>
+    <string name="cancel">CANCEL</string>
+    <string name="edit_favorite_dialog_message">Remove from favorites?</string>
+
+    <string name="urbana_north_east_lat">40.156446</string>
+    <string name="urbana_north_east_lon">-88.163334</string>
+    <string name="champaign_south_west_lat">40.065831</string>
+    <string name="champaign_south_west_lon">-88.329406</string>
+
+    <!-- Permission Activity -->
+    <string name="location_permission_explanation">CU bus uses your location to search
+        for\nnearby buses and give you real-time\nbus departures</string>
+    <string name="permission_text_not_now">Not now</string>
+    <string name="ok_button_content_description">Grant location permission button</string>
+    <string name="image_location_permission_content_description">Location permission image</string>
+
+    <!-- GoogleSearchFragment -->
+    <string name="recent_place_header">Recent</string>
+    <string name="recent_searched_place_content_description">Recent searched place</string>
+    
+    <!-- PlannedTripsResultFragment -->
+    <string name="no_transit_route_content_description">No transit routes</string>
+    <string name="no_transit_route_message">No transit routes found</string>
+    
+    <!-- RecentDirectionFragment -->
+    <string name="recent_direction_header">Recent directions</string>
+    <string name="more_recent_directions_button_text">More recent directions</string>
+
+    <!-- String resources for testing TextView -->
+    <string name="very_long_text_for_testing">Apparently we had reached a great height in the atmosphere, for the sky was a dead black, and the stars had ceased to twinkle. By the same illusion which lifts the horizon of the sea to the level of the spectator on a hillside, the sable cloud beneath was dished out, and the car seemed to float in the middle of an immense dark sphere, whose upper half was strewn with silver.</string>
 </resources>

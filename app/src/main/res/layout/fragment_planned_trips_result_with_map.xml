@@ -22,9 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <include
-            layout="@layout/bottom_sheet_planned_trip_results_with_map"
-            app:layout_behavior="@string/bottom_sheet_behavior" />
+        <include layout="@layout/nested_test_layout" />
     </android.support.design.widget.CoordinatorLayout>
 
 </android.support.design.widget.CoordinatorLayout>

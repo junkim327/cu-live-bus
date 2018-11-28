@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/image_bus_icon_bus_info_card_in_bottom_sheet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/text_bus_name_bus_info_card_in_bottom_sheet"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_directions_bus_black_24dp" />
+
+    <TextView
+        android:id="@+id/text_bus_name_bus_info_card_in_bottom_sheet"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/oxygen_bold"
+        android:text="@string/no_info"
+        android:textColor="@color/textMainColor"
+        app:layout_constraintBottom_toBottomOf="@+id/image_bus_icon_bus_info_card_in_bottom_sheet"
+        app:layout_constraintEnd_toStartOf="@+id/image_right_arrow_bus_info_card_in_bottom_sheet"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/image_bus_icon_bus_info_card_in_bottom_sheet"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <ImageView
+        android:id="@+id/image_right_arrow_bus_info_card_in_bottom_sheet"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/image_bus_icon_bus_info_card_in_bottom_sheet"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/text_bus_name_bus_info_card_in_bottom_sheet"
+        app:layout_constraintTop_toTopOf="@+id/image_bus_icon_bus_info_card_in_bottom_sheet"
+        app:srcCompat="@drawable/ic_right_arrow" />
+
+</android.support.constraint.ConstraintLayout>

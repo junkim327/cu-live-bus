@@ -20,44 +20,14 @@ import com.example.junyoung.culivebus.util.TimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdapter.BusDeparturesViewHolder> {
-  public static class BusDeparturesViewHolder extends RecyclerView.ViewHolder
-    implements View.OnClickListener{
-    public CountDownTimer timer;
-    public CountDownTimer timer2;
-    public ConstraintLayout card;
-    public TextView mBusNameTextView;
-    public TextView mBusDirectionTextView;
-    public TextView mOneBusEstimatedArrivalTimeTextView;
-    public TextView mTwoBusEstimatedArrivalTimeTextView;
-    public RecyclerviewClickListener mRecyclerViewClickListener;
-
-    public BusDeparturesViewHolder(View itemView, RecyclerviewClickListener listener) {
-      super(itemView);
-
-      card = (ConstraintLayout) itemView;
-      mBusNameTextView = itemView.findViewById(R.id.text_bus_name_card_bus_departures);
-      mBusDirectionTextView = itemView.findViewById(R.id.text_direction_card_bus_departures);
-      mOneBusEstimatedArrivalTimeTextView =
-        itemView.findViewById(R.id.text_one_estimated_arrival_time_card_bus_departures);
-      mTwoBusEstimatedArrivalTimeTextView =
-        itemView.findViewById(R.id.text_two_estimated_arrival_time_card_bus_departures);
-      mRecyclerViewClickListener = listener;
-      itemView.setOnClickListener(this);
-    }
-
-    @Override
-    public void onClick(View view) {
-      int pos = getAdapterPosition();
-      if (pos != RecyclerView.NO_POSITION) {
-        mRecyclerViewClickListener.onClick(view, pos);
-      }
-    }
-  }
-
   private static final long MAGIC_NUMBER = 10000L;
 
   private Context mContext;
+  private LayoutInflater mInflater;
   private BusDeparturesViewHolder mViewHolder;
   private List<SortedDeparture> mSortedDepartureList = new ArrayList<>();
   private RecyclerviewClickListener mRecyclerViewClickListener;
@@ -78,18 +48,15 @@ public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdap
   @NonNull
   @Override
   public BusDeparturesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-    LayoutInflater inflater = LayoutInflater.from(mContext);
-
     Log.d("BusDeparturesAdapter", "onCreateViewHolder is called");
+    if (mInflater == null) {
+      mInflater = LayoutInflater.from(mContext);
+    }
 
-    View view = inflater.inflate(R.layout.card_bus_departures, parent, false);
-    BusDeparturesViewHolder viewHolder = new BusDeparturesViewHolder(
-      view,
-      mRecyclerViewClickListener
-    );
-    mViewHolder = viewHolder;
+    View view = mInflater.inflate(R.layout.card_bus_departures, parent, false);
+    mViewHolder = new BusDeparturesViewHolder(view, mRecyclerViewClickListener);
 
-    return viewHolder;
+    return mViewHolder;
   }
 
   @Override
@@ -109,24 +76,24 @@ public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdap
       long firstBusRemainingArrivalTime = TimeFormatter.getRemainingArrivalTime(
         departure.getExpectedList().get(0)) + MAGIC_NUMBER;
 
-      holder.timer = new CountDownTimer(firstBusRemainingArrivalTime, DateUtils.SECOND_IN_MILLIS) {
+      holder.mTimer = new CountDownTimer(firstBusRemainingArrivalTime, DateUtils.SECOND_IN_MILLIS) {
         @Override
         public void onTick(long remainingMillis) {
           //Log.d("Timer", "Clock is ticking");
           if (remainingMillis > DateUtils.MINUTE_IN_MILLIS + MAGIC_NUMBER) {
             int minutes = (int) (remainingMillis - MAGIC_NUMBER) / (60 * 1000) % 60;
             int seconds = (int) (remainingMillis - MAGIC_NUMBER) / 1000 % 60;
-            holder.mOneBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+            holder.mTicker1.setText(mContext.getString(
               R.string.bus_remaining_arrival_time,
               minutes,
               seconds
-              ));
+            ));
           } else if (remainingMillis > MAGIC_NUMBER) {
-            holder.mOneBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+            holder.mTicker1.setText(mContext.getString(
               R.string.bus_arrives_soon
             ));
           } else {
-            holder.mOneBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+            holder.mTicker1.setText(mContext.getString(
               R.string.bus_arrived
             ));
           }
@@ -142,7 +109,7 @@ public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdap
         long secondBusRemainingArrivalTime = TimeFormatter.getRemainingArrivalTime(
           departure.getExpectedList().get(1)) + MAGIC_NUMBER;
 
-        holder.timer2 = new CountDownTimer(secondBusRemainingArrivalTime,
+        holder.mTimer2 = new CountDownTimer(secondBusRemainingArrivalTime,
           DateUtils.SECOND_IN_MILLIS) {
           @Override
           public void onTick(long remainingMillis) {
@@ -150,17 +117,17 @@ public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdap
             if (remainingMillis > DateUtils.MINUTE_IN_MILLIS + MAGIC_NUMBER) {
               int minutes = (int) (remainingMillis - MAGIC_NUMBER) / (60 * 1000) % 60;
               int seconds = (int) (remainingMillis - MAGIC_NUMBER) / 1000 % 60;
-              holder.mTwoBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+              holder.mTicker2.setText(mContext.getString(
                 R.string.bus_remaining_arrival_time,
                 minutes,
                 seconds
               ));
             } else if (remainingMillis > MAGIC_NUMBER) {
-              holder.mTwoBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+              holder.mTicker2.setText(mContext.getString(
                 R.string.bus_arrives_soon
               ));
             } else {
-              holder.mTwoBusEstimatedArrivalTimeTextView.setText(mContext.getString(
+              holder.mTicker2.setText(mContext.getString(
                 R.string.bus_arrived
               ));
             }
@@ -189,13 +156,13 @@ public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdap
     BusDeparturesViewHolder holder = (BusDeparturesViewHolder) vh;
 
     if (holder != null) {
-      if (holder.timer != null) {
-        holder.timer.cancel();
-        holder.timer = null;
+      if (holder.mTimer != null) {
+        holder.mTimer.cancel();
+        holder.mTimer = null;
       }
-      if (holder.timer2 != null) {
-        holder.timer2.cancel();
-        holder.timer2 = null;
+      if (holder.mTimer2 != null) {
+        holder.mTimer2.cancel();
+        holder.mTimer2 = null;
       }
     }
   }
@@ -211,18 +178,52 @@ public class BusDeparturesAdapter extends RecyclerView.Adapter<BusDeparturesAdap
     super.onViewDetachedFromWindow(holder);
     Log.d("BusDeparturesAdapter", "onViewDetachedFromWindow has called");
 
-    if (holder.timer != null) {
-      holder.timer.cancel();
-      holder.timer = null;
+    if (holder.mTimer != null) {
+      holder.mTimer.cancel();
+      holder.mTimer = null;
     }
-    if (holder.timer2 != null) {
-      holder.timer2.cancel();
-      holder.timer2 = null;
+    if (holder.mTimer2 != null) {
+      holder.mTimer2.cancel();
+      holder.mTimer2 = null;
     }
   }
 
   @Override
   public int getItemCount() {
     return mSortedDepartureList.size();
+  }
+
+  static class BusDeparturesViewHolder extends RecyclerView.ViewHolder
+    implements View.OnClickListener{
+    public ConstraintLayout mCard;
+    public CountDownTimer mTimer, mTimer2;
+    public RecyclerviewClickListener mRecyclerViewClickListener;
+
+    @BindView(R.id.text_bus_name_card_bus_departures)
+    TextView mBusNameTextView;
+    @BindView(R.id.text_direction_card_bus_departures)
+    TextView mBusDirectionTextView;
+    @BindView(R.id.ticker_one_card_bus_departures)
+    TextView mTicker1;
+    @BindView(R.id.ticker_two_card_bus_departures)
+    TextView mTicker2;
+
+    public BusDeparturesViewHolder(View itemView, RecyclerviewClickListener listener) {
+      super(itemView);
+
+      ButterKnife.bind(this, itemView);
+
+      mCard = (ConstraintLayout) itemView;
+      mRecyclerViewClickListener = listener;
+      itemView.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+      int pos = getAdapterPosition();
+      if (pos != RecyclerView.NO_POSITION) {
+        mRecyclerViewClickListener.onClick(view, pos);
+      }
+    }
   }
 }

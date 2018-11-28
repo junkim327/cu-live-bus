@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="anim_duration_medium">300</integer>
+    <integer name="anim_duration_long">700</integer>
+    <integer name="max_saved_stop_ids_size">3</integer>
+
+    <integer name="result_ok">1</integer>
+    <integer name="result_fail">0</integer>
+</resources>

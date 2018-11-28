@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.BaseTransientBottomBar;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
@@ -59,6 +58,8 @@ import butterknife.Unbinder;
 
 import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
 import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
+import static android.view.View.INVISIBLE;
+import static android.view.View.VISIBLE;
 
 public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   GoogleMap.OnCameraIdleListener,
@@ -72,7 +73,7 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   private String mUserLongitude;
   private boolean mIsInternetConnected;
 
-  private StopPoint selectedStopPoint;
+  private StopPoint mSelectedStopPoint;
 
   private GoogleMap mMap;
   private Unbinder mUnbinder;
@@ -111,6 +112,8 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   public void onAttach(Context context) {
     super.onAttach(context);
 
+    Log.d(TAG, "onAttach has called.");
+
     try {
       mInternetConnectedCallback = (OnInternetConnectedListener) context;
     } catch (ClassCastException e) {
@@ -130,6 +133,8 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    Log.d(TAG, "onCreate has called.");
+
     if (getActivity() != null) {
       mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
         Context.CONNECTIVITY_SERVICE
@@ -143,6 +148,8 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
     checkInternetConnection();
+
+    Log.d(TAG, "onCreateView has called.");
 
     View view = null;
     if (mIsInternetConnected) {
@@ -194,6 +201,10 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
     if (mapFragment != null) {
       mapFragment.getMapAsync(this);
     }
+
+    if (mapFragment != null && mapFragment.getView() != null) {
+      mapFragment.getView().setVisibility(INVISIBLE);
+    }
   }
 
   @Override
@@ -242,10 +253,12 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   }
 
   private void animateCamera() {
-    if (mUserLatitude != null && mUserLongitude != null) {
-      mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-        new LatLng(Double.valueOf(mUserLatitude), Double.valueOf(mUserLongitude)), 16.0f),
-        500, null);
+    if (mSelectedStopPoint == null) {
+      if (mUserLatitude != null && mUserLongitude != null) {
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+          new LatLng(Double.valueOf(mUserLatitude), Double.valueOf(mUserLongitude)), 16.0f)
+        );
+      }
     }
   }
 
@@ -253,13 +266,28 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
 
-    mBusStopViewModel = ViewModelProviders.of(this).get(BusStopViewModel.class);
-    mBusStopViewModel.getBusStopList().observe(this, this::processResponse);
+    Log.d(TAG, "onActivityCreated has called.");
 
-    if (getActivity() != null) {
-      mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
-        .get(SharedStopPointViewModel.class);
+    if (mSelectedStopPoint != null) {
+      mBusStopNameTextView.setText(mSelectedStopPoint.getStopName());
+      mBusStopCodeTextView.setText(mSelectedStopPoint.getStopCode());
     }
+
+    if (mBusStopViewModel == null) {
+      mBusStopViewModel = ViewModelProviders.of(this).get(BusStopViewModel.class);
+      mBusStopViewModel.getBusStopList().observe(this, this::processResponse);
+    }
+
+      if (getActivity() != null && mSharedStopPointViewModel == null) {
+        mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
+          .get(SharedStopPointViewModel.class);
+      }
+  }
+
+  @Override
+  public void onSaveInstanceState(@NonNull Bundle outState) {
+    super.onSaveInstanceState(outState);
+    outState.putInt("hello", 1);
   }
 
   private void processResponse(Response<List<Stop>> response) {
@@ -267,6 +295,7 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
       case SUCCESS:
         if (response.mData != null) {
           Log.d(TAG, "SUCCESS");
+          Log.d(TAG, "DATA SIZE: " + response.mData.size());
           createBusStopMarkers(response.mData);
         }
         break;
@@ -327,10 +356,21 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
   }
 
   @Override
+  public void onStart() {
+    super.onStart();
+
+    Log.d(TAG, "onStart has called.");
+  }
+
+  @Override
   public void onResume() {
     super.onResume();
 
+    Log.d(TAG, "onResume has called.");
+
     checkInternetConnection();
+
+    setMapVisible();
 
     mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
       @Override
@@ -347,6 +387,14 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
         }
       }
     });
+  }
+
+  private void setMapVisible() {
+    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+      .findFragmentById(R.id.map_near_by_stop);
+    if (mapFragment != null && mapFragment.getView() != null) {
+      mapFragment.getView().setVisibility(VISIBLE);
+    }
   }
 
   @Override
@@ -369,11 +417,13 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
       return true;
     }*/
 
-    selectedStopPoint = (StopPoint) marker.getTag();
+    Log.d(TAG, "Marker clicked.");
 
-    if (selectedStopPoint != null) {
-      mBusStopNameTextView.setText(selectedStopPoint.getStopName());
-      mBusStopCodeTextView.setText(selectedStopPoint.getStopCode());
+    mSelectedStopPoint = (StopPoint) marker.getTag();
+
+    if (mSelectedStopPoint != null) {
+      mBusStopNameTextView.setText(mSelectedStopPoint.getStopName());
+      mBusStopCodeTextView.setText(mSelectedStopPoint.getStopCode());
     }
 
     if (mSnackbar != null && mSnackbar.isShown()) {
@@ -400,8 +450,8 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
 
   @OnClick(R.id.button_bus_departures_bottom_sheet)
   public void clickBusDeparturesButton() {
-    if (selectedStopPoint != null) {
-      mSharedStopPointViewModel.select(selectedStopPoint);
+    if (mSelectedStopPoint != null) {
+      mSharedStopPointViewModel.select(mSelectedStopPoint);
     }
     mOnBusStopClickedCallback.onBusStopClicked();
   }
