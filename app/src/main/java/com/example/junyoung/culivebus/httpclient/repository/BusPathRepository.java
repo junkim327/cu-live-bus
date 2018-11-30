@@ -1,12 +1,13 @@
 package com.example.junyoung.culivebus.httpclient.repository;
 
-import android.arch.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.example.junyoung.culivebus.Constants;
 import com.example.junyoung.culivebus.httpclient.RetrofitBuilder;
 import com.example.junyoung.culivebus.httpclient.pojos.Leg;
 import com.example.junyoung.culivebus.httpclient.pojos.Path;
 import com.example.junyoung.culivebus.httpclient.pojos.Service;
+import com.example.junyoung.culivebus.httpclient.pojos.Shape;
 import com.example.junyoung.culivebus.httpclient.services.ShapeService;
 
 import java.util.ArrayList;
@@ -48,25 +49,8 @@ public class BusPathRepository {
     });
   }
 
-  public MutableLiveData<Path> getBusPath(MutableLiveData<Path> path, String shapeId) {
-    mShapeService.getShape(Constants.API_KEY, shapeId).enqueue(new Callback<Path>() {
-      @Override
-      public void onResponse(Call<Path> call, Response<Path> response) {
-        if (response.isSuccessful()) {
-          if (response.body() != null) {
-            path.setValue(response.body());
-          }
-        }
-      }
-
-      @Override
-      public void onFailure(Call<Path> call, Throwable t) {
-
-      }
-    });
-
-    return path;
+  public Single<List<Shape>> getBusPath(String shapeId) {
+    return mShapeService.getShape(Constants.API_KEY, shapeId)
+      .map(Path::getShapes);
   }
-
-
 }

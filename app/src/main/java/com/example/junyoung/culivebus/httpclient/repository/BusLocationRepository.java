@@ -1,7 +1,7 @@
 package com.example.junyoung.culivebus.httpclient.repository;
 
-import android.arch.lifecycle.MutableLiveData;
-import android.support.annotation.NonNull;
+import androidx.lifecycle.MutableLiveData;
+import androidx.annotation.NonNull;
 
 import com.example.junyoung.culivebus.Constants;
 import com.example.junyoung.culivebus.httpclient.RetrofitBuilder;
@@ -9,6 +9,8 @@ import com.example.junyoung.culivebus.httpclient.pojos.Vehicle;
 import com.example.junyoung.culivebus.httpclient.pojos.VehicleData;
 import com.example.junyoung.culivebus.httpclient.services.BusLocationService;
 
+import io.reactivex.Single;
+import io.reactivex.functions.Function;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -19,6 +21,11 @@ public class BusLocationRepository {
   public BusLocationRepository() {
     mBusLocationService = RetrofitBuilder.getRetrofitandRxJavaInstance()
       .create(BusLocationService.class);
+  }
+
+  public Single<Vehicle> getBus(String busId) {
+    return mBusLocationService.getVehicleSingle(Constants.API_KEY, busId)
+      .map(vehicleData -> vehicleData.getVehicles().get(0));
   }
 
   public void getBusLocation(MutableLiveData<Vehicle> data, String busId) {

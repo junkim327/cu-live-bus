@@ -1,21 +1,24 @@
 package com.example.junyoung.culivebus.fragment;
 
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.BottomSheetBehavior;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.res.ResourcesCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
+import com.example.junyoung.culivebus.vo.Response;
+import com.google.android.gms.maps.MapView;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,7 +28,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.junyoung.culivebus.DeviceDimensionsHelper;
 import com.example.junyoung.culivebus.RouteItemDecoration;
 import com.example.junyoung.culivebus.adapter.BusStopInfoWindowAdapter;
 import com.example.junyoung.culivebus.httpclient.pojos.StopTimes;
@@ -46,7 +48,6 @@ import com.example.junyoung.culivebus.util.listener.RecyclerviewClickListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.JointType;
@@ -57,8 +58,10 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.RoundCap;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -69,12 +72,12 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 import static android.view.View.GONE;
-import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
 public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
   GoogleMap.OnMarkerClickListener {
   private static final String TAG = BusRouteFragment.class.getSimpleName();
+  private static final long UPDATE_INTERVAL_IN_MILLI = 40000L;
 
   private List<Marker> mMarkerList = Collections.emptyList();
 
@@ -86,13 +89,14 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
   private SortedDeparture mDeparture;
   private String mBusName;
   private String mBusCode;
+  private long mRecentVehicleUpdatedTime;
 
   private GoogleMap mMap;
   private Unbinder mUnbinder;
-  private BottomSheetBehavior mBusStopBottomSheetBehavior;
   private BottomSheetBehavior mBottomSheetBehavior;
   private BusRouteAdapter mAdapter;
   private ConnectivityManager mConnectivityManager;
+  private Marker mBusMarker;
 
   // ViewModels
   private BusPathViewModel mBusPathViewModel;
@@ -106,6 +110,10 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
 
   @BindView(R.id.toolbar_bus_routes)
   Toolbar mToolbar;
+  @BindView(R.id.map_view_bus_route)
+  MapView mMapView;
+  @BindView(R.id.fab_bus_routes)
+  FloatingActionButton mFloatingActionButton;
   @BindView(R.id.recycler_view_bus_routes)
   RecyclerView mRecyclerView;
 
@@ -168,8 +176,6 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     }
 
     mBusPathViewModel = ViewModelProviders.of(this).get(BusPathViewModel.class);
-
-    mBusRouteViewModel = ViewModelProviders.of(this).get(BusRouteViewModel.class);
   }
 
   @Nullable
@@ -188,27 +194,19 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       view = inflater.inflate(R.layout.fragment_bus_routes, container, false);
       mUnbinder = ButterKnife.bind(this, view);
 
-      loadMapFragment();
-      setToolbar();
-      setRecyclerView();
-      mBottomSheetBehavior = BottomSheetBehavior.from(mRecyclerView);
-      //mBottomSheetBehavior.setFitToContents(true);
+      mMapView.onCreate(savedInstanceState);
+      mMapView.getMapAsync(this);
 
+      setToolbar();
+      initRecyclerView();
+      setupFloatingActionButton();
+
+      mBottomSheetBehavior = BottomSheetBehavior.from(mRecyclerView);
       mBottomSheetBehavior.setPeekHeight(mBusStopInfoCardHeight + mBusInfoCardHeight);
       mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
     }
 
     return view;
-  }
-
-
-  private void loadMapFragment() {
-    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-      .findFragmentById(R.id.map_bus_route);
-    mapFragment.getMapAsync(this);
-    if (mapFragment.getView() != null) {
-      mapFragment.getView().setVisibility(INVISIBLE);
-    }
   }
 
   private void setToolbar() {
@@ -226,7 +224,7 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     }
   }
 
-  private void setRecyclerView() {
+  private void initRecyclerView() {
     mRecyclerView.setHasFixedSize(true);
 
     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
@@ -241,8 +239,18 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     RecyclerviewClickListener listener = this::onRecyclerViewClicked;
     mAdapter = new BusRouteAdapter(getContext(), listener);
     mRecyclerView.setAdapter(mAdapter);
+  }
 
-    // mRecyclerView.setNestedScrollingEnabled(false);
+  private void setupFloatingActionButton() {
+    mFloatingActionButton.setOnClickListener(view -> {
+      long currentTimeInMilli = Calendar.getInstance().getTimeInMillis();
+      if ((currentTimeInMilli - mRecentVehicleUpdatedTime) > UPDATE_INTERVAL_IN_MILLI) {
+        Log.d(TAG, "Vehicle updated");
+        mBusRouteViewModel.initVehicle(mBusCode);
+        mRecentVehicleUpdatedTime = currentTimeInMilli;
+      }
+      Log.d(TAG, "Time : " + mRecentVehicleUpdatedTime);
+    });
   }
 
   private void onRecyclerViewClicked(View view, int pos) {
@@ -268,6 +276,7 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
 
   @Override
   public void onMapReady(GoogleMap googleMap) {
+    Log.d(TAG, "onMapReady has called");
     mMap = googleMap;
 
     mMap.setPadding(0, 0, 0, mBusInfoCardHeight + mBusStopInfoCardHeight);
@@ -277,8 +286,10 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     mMap.setInfoWindowAdapter(new BusStopInfoWindowAdapter(getActivity()));
 
     if (mDeparture != null) {
-      mBusPathViewModel.init(mDeparture.getTripList().get(0).getShapeId());
-      mBusRouteViewModel.initBusLocation(mDeparture.getVehicleIdList().get(0));
+      mBusPathViewModel.initShapeList(mDeparture.getTripList().get(0).getShapeId());
+      mBusRouteViewModel.initVehicle(mBusCode);
+      mRecentVehicleUpdatedTime = Calendar.getInstance().getTimeInMillis();
+      Log.d(TAG, "Time : " + mRecentVehicleUpdatedTime);
     }
 
     //-87.896498
@@ -306,30 +317,13 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
 
     Log.d(TAG, "onActivityCreated has called");
 
+    mBusRouteViewModel = ViewModelProviders.of(this).get(BusRouteViewModel.class);
     mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
       .get(SharedStopPointViewModel.class);
 
-    mBusPathViewModel.getBusPath().observe(this, path -> {
-      // Update UI
-      if (path != null) {
-        LatLngBounds bound = drawPolyline(path.getShapes());
-        mMap.setOnMapLoadedCallback(() -> {
-          if (bound != null) {
-            Log.d(TAG, "onMapLoaded has called");
-            mMap.setLatLngBoundsForCameraTarget(bound);
-            if (mBusLocation != null) {
-              mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mBusLocation, 15));
-            }
-          }
-        });
-      }
-    });
-
-    mBusRouteViewModel.getBusLocation().observe(this, vehicle -> {
-      if (vehicle != null) {
-        drawBusMarker(vehicle);
-      }
-    });
+    // Update UI
+    mBusPathViewModel.getShapeResponse().observe(this, this::processShapeResponse);
+    mBusRouteViewModel.getVehicleResponse().observe(this, this::processVehicleResponse);
 
     if (mDeparture != null) {
       mBusRouteViewModel.initRouteList(mDeparture.getTripList().get(0).getTripId());
@@ -342,32 +336,73 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     });
   }
 
-  private void drawBusMarker(Vehicle vehicle) {
+  private void processShapeResponse(Response<List<Shape>> response) {
+    switch (response.mStatus) {
+      case SUCCESS:
+        if (response.mData != null && !response.mData.isEmpty()) {
+          LatLngBounds bound = drawPolyline(response.mData);
+          mMap.setOnMapLoadedCallback(() -> {
+            if (bound != null) {
+              Log.d(TAG, "onMapLoaded has called");
+              mMap.setLatLngBoundsForCameraTarget(bound);
+            }
+          });
+        }
+        break;
+      case ERROR:
+        break;
+      default:
+        break;
+    }
+  }
+
+  private void processVehicleResponse(Response<Vehicle> response) {
+    switch (response.mStatus) {
+      case SUCCESS:
+        if (response.mData != null) {
+          drawBusMarker(response.mData);
+        }
+        break;
+      case ERROR:
+
+        break;
+    }
+  }
+
+  private void drawBusMarker(@NonNull Vehicle vehicle) {
     if (vehicle.getTrip() != null && vehicle.getLocation() != null) {
       Location busLocation = vehicle.getLocation();
-      MarkerOptions options = new MarkerOptions()
-        .position(new LatLng(busLocation.getLat(), busLocation.getLon()))
-        .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_side_color))
-        .zIndex(1.0f)
-        .flat(true);
-
-      if (vehicle.getTrip().getDirection().startsWith("W")) {
-        options.icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_side_invert_color));
-      } else if (vehicle.getTrip().getDirection().startsWith("N")) {
-        options.rotation(270);
-      } else if (vehicle.getTrip().getDirection().startsWith("S")) {
-        options.rotation(90);
-      }
-
       mBusLocation = new LatLng(busLocation.getLat(), busLocation.getLon());
 
-      if (mMap != null) {
-        mMap.addMarker(options);
+      if (mBusMarker != null) {
+        mBusMarker.setPosition(mBusLocation);
+        if (mMap != null) {
+          mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mBusLocation, 15.0f));
+        }
+      } else {
+        MarkerOptions options = new MarkerOptions()
+          .position(mBusLocation)
+          .icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_side_color))
+          .zIndex(1.0f)
+          .flat(true);
+
+        if (vehicle.getTrip().getDirection().startsWith("W")) {
+          options.icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_side_invert_color));
+        } else if (vehicle.getTrip().getDirection().startsWith("N")) {
+          options.rotation(270);
+        } else if (vehicle.getTrip().getDirection().startsWith("S")) {
+          options.rotation(90);
+        }
+
+        if (mMap != null) {
+          mBusMarker = mMap.addMarker(options);
+          mMap.moveCamera(CameraUpdateFactory.newLatLng(mBusLocation));
+          mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+        }
       }
     }
 
     Log.d(TAG, "Finish drawing bus marker.");
-
   }
 
   private LatLngBounds drawPolyline(List<Shape> shapeList) {
@@ -385,7 +420,6 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
             .position(point)
             .icon(BitmapDescriptorFactory.fromResource(R.drawable.google_map_custom_marker))
           ).setTag(busStopIndex++);*/
-
 
           mMap.addCircle(new CircleOptions()
             .center(point)
@@ -416,12 +450,6 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       polyline.setEndCap(new RoundCap());
       polyline.setJointType(JointType.ROUND);
 
-      SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-        .findFragmentById(R.id.map_bus_route);
-      if (mapFragment.getView() != null) {
-        mapFragment.getView().setVisibility(VISIBLE);
-      }
-
       Log.d(TAG, "Polyline was drawn");
 
       return builder.build();
@@ -430,9 +458,17 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     return null;
   }
 
+
+  @Override
+  public void onStart() {
+    super.onStart();
+    mMapView.onStart();
+  }
+
   @Override
   public void onResume() {
     super.onResume();
+    mMapView.onResume();
     Log.d(TAG, "onResume has called");
 
     mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
@@ -476,6 +512,32 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       default:
         return super.onOptionsItemSelected(item);
     }
+  }
+
+  @Override
+  public void onStop() {
+    super.onStop();
+    mMapView.onStop();
+  }
+
+  @Override
+  public void onPause() {
+    super.onPause();
+    mMapView.onPause();
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    if (mMapView != null) {
+      mMapView.onDestroy();
+    }
+  }
+
+  @Override
+  public void onLowMemory() {
+    super.onLowMemory();
+    mMapView.onLowMemory();
   }
 
   @Override
