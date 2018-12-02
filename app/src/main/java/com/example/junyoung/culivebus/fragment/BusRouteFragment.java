@@ -1,17 +1,26 @@
 package com.example.junyoung.culivebus.fragment;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.example.junyoung.culivebus.room.entity.StopPoint;
 import com.example.junyoung.culivebus.vo.Response;
 import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.appcompat.app.ActionBar;
@@ -26,10 +35,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.example.junyoung.culivebus.RouteItemDecoration;
-import com.example.junyoung.culivebus.adapter.BusStopInfoWindowAdapter;
 import com.example.junyoung.culivebus.httpclient.pojos.StopTimes;
 import com.example.junyoung.culivebus.util.listener.OnHomeItemClickedListener;
 import com.example.junyoung.culivebus.util.listener.OnInternetConnectedListener;
@@ -52,7 +62,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.JointType;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -69,27 +78,28 @@ import butterknife.BindColor;
 import butterknife.BindDimen;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.Unbinder;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
 public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
-  GoogleMap.OnMarkerClickListener {
+  GoogleMap.OnMarkerClickListener,
+  GoogleMap.OnCircleClickListener {
   private static final String TAG = BusRouteFragment.class.getSimpleName();
   private static final long UPDATE_INTERVAL_IN_MILLI = 40000L;
 
-  private List<Marker> mMarkerList = Collections.emptyList();
-
+  private String mBusName;
+  private String mBusCode;
   private String mRouteColor;
   private boolean mDoesUserJustClickedRecyclerView = false;
   private boolean mIsInternetConnected;
-  private LatLng mBusLocation;
-
-  private SortedDeparture mDeparture;
-  private String mBusName;
-  private String mBusCode;
   private long mRecentVehicleUpdatedTime;
+
+  private LatLng mBusLocation;
+  private SortedDeparture mDeparture;
+  private Marker mCircleClickedIndicatorMarker;
 
   private GoogleMap mMap;
   private Unbinder mUnbinder;
@@ -105,6 +115,7 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
   private SharedDepartureViewModel mSharedDepartureViewModel;
 
   // Callbacks
+  private OnBusStopClickedListener mBusStopClickedCallback;
   private OnHomeItemClickedListener mHomeItemClickedCallback;
   private OnInternetConnectedListener mInternetConnectedCallback;
 
@@ -123,6 +134,8 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
   TextView mBusStopCodeTextView;
   @BindView(R.id.text_bus_stop_name_card_bus_stop_info)
   TextView mBusStopNameTextView;
+  @BindView(R.id.button_bus_departures_card_bus_stop_info)
+  ImageButton mBusDepartureButton;
 
   @BindDimen(R.dimen.bus_stop_info_card_height)
   int mBusStopInfoCardHeight;
@@ -132,6 +145,10 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
   int mBusStopMarkerHeight;
   @BindColor(R.color.white)
   int mWhite;
+
+  public interface OnBusStopClickedListener {
+    void onBusStopClicked();
+  }
 
   @Override
   public void onAttach(Context context) {
@@ -152,6 +169,13 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       throw new ClassCastException(context.toString()
         + " must implement OnHomeItemClickedListener.");
     }
+
+    try {
+      mBusStopClickedCallback = (OnBusStopClickedListener) context;
+    } catch (ClassCastException e) {
+      throw new ClassCastException(context.toString()
+        + " must implement OnBusStopClickedListener.");
+    }
   }
 
   @Override
@@ -159,8 +183,6 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     super.onCreate(savedInstanceState);
 
     Log.d(TAG, "onCreate has called");
-
-    mMarkerList = new ArrayList<>();
 
     mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
       Context.CONNECTIVITY_SERVICE
@@ -176,6 +198,36 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     }
 
     mBusPathViewModel = ViewModelProviders.of(this).get(BusPathViewModel.class);
+  }
+
+  @Override
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+
+    Log.d(TAG, "onActivityCreated has called");
+
+    mBusRouteViewModel = ViewModelProviders.of(this).get(BusRouteViewModel.class);
+    mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
+      .get(SharedStopPointViewModel.class);
+
+    // Update UI
+    mBusPathViewModel.getShapeResponse().observe(this, this::processShapeResponse);
+    mBusRouteViewModel.getVehicleResponse().observe(this, this::processVehicleResponse);
+
+    if (mDeparture != null) {
+      mBusRouteViewModel.initRouteList(mDeparture.getTripList().get(0).getTripId());
+    }
+
+    mBusRouteViewModel.getRouteList().observe(this, routeList -> {
+      if (routeList != null && mDeparture != null) {
+        mAdapter.updateStopTimesList(mRouteColor, mBusName, mBusCode, routeList);
+      }
+    });
+
+    if (getActivity() != null && mSharedStopPointViewModel == null) {
+      mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
+        .get(SharedStopPointViewModel.class);
+    }
   }
 
   @Nullable
@@ -224,12 +276,25 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     }
   }
 
+  private void setupFloatingActionButton() {
+    mFloatingActionButton.setOnClickListener(view -> {
+      mFloatingActionButton.startAnimation(AnimationUtils.loadAnimation(
+        getContext(), R.anim.rotate));
+      long currentTimeInMilli = Calendar.getInstance().getTimeInMillis();
+      if ((currentTimeInMilli - mRecentVehicleUpdatedTime) > UPDATE_INTERVAL_IN_MILLI) {
+        Log.d(TAG, "Vehicle updated");
+        mBusRouteViewModel.initVehicle(mBusCode);
+        mRecentVehicleUpdatedTime = currentTimeInMilli;
+      }
+      Log.d(TAG, "Time : " + mRecentVehicleUpdatedTime);
+    });
+  }
+
   private void initRecyclerView() {
     mRecyclerView.setHasFixedSize(true);
 
     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
     mRecyclerView.setLayoutManager(layoutManager);
-
 
     mRecyclerView.addItemDecoration(new RouteItemDecoration(
       getContext(),
@@ -241,35 +306,28 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     mRecyclerView.setAdapter(mAdapter);
   }
 
-  private void setupFloatingActionButton() {
-    mFloatingActionButton.setOnClickListener(view -> {
-      long currentTimeInMilli = Calendar.getInstance().getTimeInMillis();
-      if ((currentTimeInMilli - mRecentVehicleUpdatedTime) > UPDATE_INTERVAL_IN_MILLI) {
-        Log.d(TAG, "Vehicle updated");
-        mBusRouteViewModel.initVehicle(mBusCode);
-        mRecentVehicleUpdatedTime = currentTimeInMilli;
-      }
-      Log.d(TAG, "Time : " + mRecentVehicleUpdatedTime);
-    });
-  }
-
   private void onRecyclerViewClicked(View view, int pos) {
     mDoesUserJustClickedRecyclerView = true;
 
     if (mBottomSheetBehavior != null) {
-      Log.d(TAG, "POS: " + pos);
-      StopTimes stop = mAdapter.getClickedStop(pos - 2);
+      updateClickedBusStopInfo(pos - 2);
+
+      StopPoint stopPoint = mAdapter.getClickedStop(pos - 2).getStopPoint();
+      createBusStopMarker(new LatLng(stopPoint.getLatitude(), stopPoint.getLongitude()));
+      animateCamera(new LatLng(stopPoint.getLatitude(), stopPoint.getLongitude()));
+      mRecyclerView.scrollToPosition(0);
+      mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    }
+  }
+
+  private void updateClickedBusStopInfo(int pos) {
+    if (mAdapter != null) {
+      StopTimes stop = mAdapter.getClickedStop(pos);
       if (stop != null) {
         mBusStopNameTextView.setText(stop.getStopPoint().getStopName());
         mBusStopCodeTextView.setText(stop.getStopPoint().getStopCode());
-      }
-
-      mRecyclerView.smoothScrollToPosition(0);
-      mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
-      mBusStopInfoLayout.setVisibility(VISIBLE);
-      if (mMarkerList.get(pos - 2) != null) {
-        animateCamera(mMarkerList.get(pos - 2).getPosition());
-        mMarkerList.get(pos - 2).showInfoWindow();
+        mBusStopInfoLayout.setVisibility(VISIBLE);
+        mSharedStopPointViewModel.select(stop.getStopPoint());
       }
     }
   }
@@ -283,8 +341,6 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     mMap.setMinZoomPreference(14.0f);
     mMap.setMaxZoomPreference(17.0f);
 
-    mMap.setInfoWindowAdapter(new BusStopInfoWindowAdapter(getActivity()));
-
     if (mDeparture != null) {
       mBusPathViewModel.initShapeList(mDeparture.getTripList().get(0).getShapeId());
       mBusRouteViewModel.initVehicle(mBusCode);
@@ -292,17 +348,49 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       Log.d(TAG, "Time : " + mRecentVehicleUpdatedTime);
     }
 
-    //-87.896498
-    //-87.896513
-
     mMap.setOnMarkerClickListener(this);
+    mMap.setOnCircleClickListener(this);
   }
 
   @Override
   public boolean onMarkerClick(Marker marker) {
-    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-    mRecyclerView.smoothScrollToPosition((int) marker.getTag());
+    Log.d(TAG, "Marker was clicked");
+    mBusStopClickedCallback.onBusStopClicked();
     return false;
+  }
+
+  /**
+   *  Create a marker at the center of circle.
+   *
+   *  If the marker is already created by clicking the circle, then first remove the marker,
+   *  and create a new one.
+   *
+   * @param circle The circle that is clicked.
+   */
+  @Override
+  public void onCircleClick(Circle circle) {
+    Log.d(TAG, "Circle has been clicked");
+
+    createBusStopMarker(circle.getCenter());
+    updateClickedBusStopInfo((int) circle.getTag());
+    animateCamera(circle.getCenter());
+  }
+
+  private void createBusStopMarker(LatLng markerPosition) {
+    if (mCircleClickedIndicatorMarker != null) {
+      mCircleClickedIndicatorMarker.remove();
+    }
+    mCircleClickedIndicatorMarker = mMap.addMarker(new MarkerOptions().position(markerPosition)
+      .icon(bitmapDescriptorFromVector()));
+  }
+
+  private BitmapDescriptor bitmapDescriptorFromVector() {
+    Drawable vectorDrawable = ContextCompat.getDrawable(getContext(), R.drawable.ic_bus_stop_color);
+    vectorDrawable.setBounds(0, 0, vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight());
+    Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(), vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+    Canvas canvas = new Canvas(bitmap);
+    vectorDrawable.draw(canvas);
+    return BitmapDescriptorFactory.fromBitmap(bitmap);
   }
 
   private void animateCamera(LatLng latLngPosition) {
@@ -311,42 +399,11 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     }
   }
 
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-
-    Log.d(TAG, "onActivityCreated has called");
-
-    mBusRouteViewModel = ViewModelProviders.of(this).get(BusRouteViewModel.class);
-    mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
-      .get(SharedStopPointViewModel.class);
-
-    // Update UI
-    mBusPathViewModel.getShapeResponse().observe(this, this::processShapeResponse);
-    mBusRouteViewModel.getVehicleResponse().observe(this, this::processVehicleResponse);
-
-    if (mDeparture != null) {
-      mBusRouteViewModel.initRouteList(mDeparture.getTripList().get(0).getTripId());
-    }
-
-    mBusRouteViewModel.getRouteList().observe(this, routeList -> {
-      if (routeList != null && mDeparture != null) {
-        mAdapter.updateStopTimesList(mRouteColor, mBusName, mBusCode, routeList);
-      }
-    });
-  }
-
   private void processShapeResponse(Response<List<Shape>> response) {
     switch (response.mStatus) {
       case SUCCESS:
         if (response.mData != null && !response.mData.isEmpty()) {
-          LatLngBounds bound = drawPolyline(response.mData);
-          mMap.setOnMapLoadedCallback(() -> {
-            if (bound != null) {
-              Log.d(TAG, "onMapLoaded has called");
-              mMap.setLatLngBoundsForCameraTarget(bound);
-            }
-          });
+          drawPolyline(response.mData);
         }
         break;
       case ERROR:
@@ -361,6 +418,11 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       case SUCCESS:
         if (response.mData != null) {
           drawBusMarker(response.mData);
+          mMap.setOnMapLoadedCallback(() -> {
+            Log.d(TAG, "onMapLoaded has called");
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(mBusLocation));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 1500, null);
+          });
         }
         break;
       case ERROR:
@@ -376,9 +438,7 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
 
       if (mBusMarker != null) {
         mBusMarker.setPosition(mBusLocation);
-        if (mMap != null) {
-          mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mBusLocation, 15.0f));
-        }
+        animateCamera(mBusLocation);
       } else {
         MarkerOptions options = new MarkerOptions()
           .position(mBusLocation)
@@ -386,57 +446,48 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
           .zIndex(1.0f)
           .flat(true);
 
-        if (vehicle.getTrip().getDirection().startsWith("W")) {
-          options.icon(BitmapDescriptorFactory.fromResource(R.drawable.bus_side_invert_color));
-        } else if (vehicle.getTrip().getDirection().startsWith("N")) {
-          options.rotation(270);
-        } else if (vehicle.getTrip().getDirection().startsWith("S")) {
-          options.rotation(90);
-        }
-
         if (mMap != null) {
           mBusMarker = mMap.addMarker(options);
-          mMap.moveCamera(CameraUpdateFactory.newLatLng(mBusLocation));
-          mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+          //mMap.moveCamera(CameraUpdateFactory.newLatLng(mBusLocation));
         }
       }
-    }
 
-    Log.d(TAG, "Finish drawing bus marker.");
+      setBusMarkerDirection(vehicle.getTrip().getDirection());
+    }
   }
 
-  private LatLngBounds drawPolyline(List<Shape> shapeList) {
+  private void setBusMarkerDirection(String direction) {
+    Log.d(TAG, "Current Direction : " + direction);
+    if (mBusMarker != null) {
+      if (direction.startsWith("W")) {
+      mBusMarker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.bus_side_invert_color));
+      } else if (direction.startsWith("N")) {
+        mBusMarker.setRotation(270);
+      } else if (direction.startsWith("S")) {
+        mBusMarker.setRotation(90);
+      }
+    }
+  }
+
+  private void drawPolyline(List<Shape> shapeList) {
     if (shapeList != null && shapeList.size() > 0) {
       int busStopIndex = 0;
-      LatLngBounds.Builder builder = LatLngBounds.builder();
       PolylineOptions polylineOptions = new PolylineOptions();
       for (int i = 0; i < shapeList.size(); i++) {
         Shape shape = shapeList.get(i);
         LatLng point = new LatLng(shape.getShapeLat(), shape.getShapeLon());
         if (shape.getStopId() != null) {
-          /*
-          mMarkerList.add(
-            mMap.addMarker(new MarkerOptions()
-            .position(point)
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.google_map_custom_marker))
-          ).setTag(busStopIndex++);*/
-
-          mMap.addCircle(new CircleOptions()
+          Circle circle = mMap.addCircle(new CircleOptions()
             .center(point)
-            .strokeColor(Color.parseColor(getResources().getString(R.string.hex_color,
-              mRouteColor)))
+            .strokeColor(Color.parseColor(getResources().getString(R.string.hex_color, mRouteColor)))
             .radius(32)
             .fillColor(mWhite)
             .zIndex(10)
           );
-          Marker marker = mMap.addMarker(new MarkerOptions()
-            .position(new LatLng(point.latitude, point.longitude))
-            .icon(BitmapDescriptorFactory.fromResource(R.drawable.google_map_custom_marker))
-          );
-          marker.setTag(busStopIndex++);
-          mMarkerList.add(marker);
+
+          circle.setClickable(true);
+          circle.setTag(busStopIndex++);
         }
-        builder.include(point);
         polylineOptions.add(point);
       }
 
@@ -451,11 +502,7 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
       polyline.setJointType(JointType.ROUND);
 
       Log.d(TAG, "Polyline was drawn");
-
-      return builder.build();
     }
-
-    return null;
   }
 
 
@@ -472,11 +519,11 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
     Log.d(TAG, "onResume has called");
 
     mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+      @SuppressLint("SwitchIntDef")
       @Override
       public void onStateChanged(@NonNull View view, int newState) {
         switch (newState) {
           case BottomSheetBehavior.STATE_COLLAPSED:
-            //mRecyclerView.smoothScrollToPosition(0);
             if (!mDoesUserJustClickedRecyclerView && mBusLocation != null) {
               animateCamera(mBusLocation);
             }
@@ -484,6 +531,8 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
             break;
           case BottomSheetBehavior.STATE_EXPANDED:
             mBusStopInfoLayout.setVisibility(GONE);
+            break;
+          default:
             break;
         }
       }
@@ -493,6 +542,11 @@ public class BusRouteFragment extends Fragment implements OnMapReadyCallback,
 
       }
     });
+  }
+
+  @OnClick(R.id.button_bus_departures_card_bus_stop_info)
+  public void busDepartureButtonClick() {
+    mBusStopClickedCallback.onBusStopClicked();
   }
 
   @Override
