@@ -1,4 +1,4 @@
-package com.example.junyoung.culivebus.util;
+package com.example.junyoung.culivebus.vo;
 
 public enum Status {
   LOADING,
