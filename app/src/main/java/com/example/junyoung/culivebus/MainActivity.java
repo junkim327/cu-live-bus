@@ -1,60 +1,74 @@
 package com.example.junyoung.culivebus;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.appcompat.app.AppCompatActivity;
 import android.widget.FrameLayout;
 
-import com.example.junyoung.culivebus.fragment.BusDeparturesFragment;
-import com.example.junyoung.culivebus.fragment.BusRouteFragment;
-import com.example.junyoung.culivebus.ui.stopsearch.BusStopSearchFragment;
+import com.example.junyoung.culivebus.fragment.DepartureFragment;
+import com.example.junyoung.culivebus.ui.route.RouteFragment;
+import com.example.junyoung.culivebus.ui.common.NavigationController;
+import com.example.junyoung.culivebus.ui.search.SearchFragment;
 import com.example.junyoung.culivebus.fragment.DashboardFragment;
 import com.example.junyoung.culivebus.fragment.NoInternetConnectionFragment;
 import com.example.junyoung.culivebus.fragment.SettingFragment;
 import com.example.junyoung.culivebus.util.listener.OnHomeItemClickedListener;
 import com.example.junyoung.culivebus.util.listener.OnInternetConnectedListener;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.support.HasSupportFragmentInjector;
 
-public class MainActivity extends AppCompatActivity implements OnInternetConnectedListener,
+public class MainActivity extends AppCompatActivity implements HasSupportFragmentInjector,
+  OnInternetConnectedListener,
   OnHomeItemClickedListener,
+  RouteFragment.OnBusStopClickedListener,
   DashboardFragment.OnSettingItemSelectedListener,
-  DashboardFragment.OnBusStopsSearchviewClickedListener,
-  BusStopSearchFragment.OnBusStopSelectedListener,
-  BusDeparturesFragment.OnDepartureClickedListener {
+  DepartureFragment.OnDepartureClickedListener {
   private static final String TAG = MainActivity.class.getSimpleName();
 
   private SettingFragment mSettingFragment;
-  private BusRouteFragment mBusRouteFragment;
+  private RouteFragment mRouteFragment;
   private DashboardFragment mDashboardFragment;
-  private BusStopSearchFragment mBusStopSearchFragment;
+  private SearchFragment mSearchFragment;
+  private DepartureFragment mDepartureFragment;
+
+  @Inject
+  DispatchingAndroidInjector<Fragment> dispatchingAndroidInjector;
+  @Inject
+  NavigationController navigationController;
 
   @BindView(R.id.framelayout_main)
-  FrameLayout mMainFrameLayout;
+  FrameLayout mContainer;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_main_temp);
+    setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
     if (savedInstanceState == null) {
-      mDashboardFragment = new DashboardFragment();
-    }
-
-    if (mMainFrameLayout != null) {
-      getSupportFragmentManager().beginTransaction()
-        .add(mMainFrameLayout.getId(), mDashboardFragment)
-        .commit();
+      navigationController.navigateToDashboard();
     }
   }
 
+  private void replaceFragment(Fragment fragment) {
+    getSupportFragmentManager().beginTransaction()
+      .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+      .replace(mContainer.getId(), fragment)
+      .addToBackStack(null)
+      .commit();
+  }
+
   private void performFragmentOperation(Fragment fragmentInstance) {
-    if (mMainFrameLayout != null) {
-      int mainFrameLayoutId = mMainFrameLayout.getId();
+    if (mContainer != null) {
+      int mainFrameLayoutId = mContainer.getId();
       FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
       if (getSupportFragmentManager().findFragmentById(mainFrameLayoutId) != null) {
         transaction.replace(mainFrameLayoutId, fragmentInstance);
@@ -71,13 +85,13 @@ public class MainActivity extends AppCompatActivity implements OnInternetConnect
   public void onInternetConnected(boolean isConnected, boolean shouldHideFragment) {
     if (!isConnected) {
       FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-      if (mMainFrameLayout != null) {
+      if (mContainer != null) {
         NoInternetConnectionFragment noInternetConnectionFragment =
           new NoInternetConnectionFragment();
-        if (getSupportFragmentManager().findFragmentById(mMainFrameLayout.getId()) != null) {
-          transaction.replace(mMainFrameLayout.getId(), noInternetConnectionFragment);
+        if (getSupportFragmentManager().findFragmentById(mContainer.getId()) != null) {
+          transaction.replace(mContainer.getId(), noInternetConnectionFragment);
         } else {
-          transaction.add(mMainFrameLayout.getId(), noInternetConnectionFragment);
+          transaction.add(mContainer.getId(), noInternetConnectionFragment);
         }
       }
       transaction.addToBackStack(null);
@@ -87,15 +101,15 @@ public class MainActivity extends AppCompatActivity implements OnInternetConnect
 
   @Override
   public void onSettingItemSelected() {
-    if (mMainFrameLayout != null) {
+    if (mContainer != null) {
       FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
       transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left,
         R.anim.enter_from_left, R.anim.exit_to_right);
       mSettingFragment = new SettingFragment();
-      if (getSupportFragmentManager().findFragmentById(mMainFrameLayout.getId()) != null) {
-        transaction.replace(mMainFrameLayout.getId(), mSettingFragment);
+      if (getSupportFragmentManager().findFragmentById(mContainer.getId()) != null) {
+        transaction.replace(mContainer.getId(), mSettingFragment);
       } else {
-        transaction.add(mMainFrameLayout.getId(), mSettingFragment);
+        transaction.add(mContainer.getId(), mSettingFragment);
       }
       transaction.addToBackStack(null);
       transaction.commit();
@@ -103,34 +117,12 @@ public class MainActivity extends AppCompatActivity implements OnInternetConnect
   }
 
   @Override
-  public void onBusStopsSearchviewClicked() {
-    if (mMainFrameLayout != null) {
-      FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-      mBusStopSearchFragment = new BusStopSearchFragment();
-      if (getSupportFragmentManager().findFragmentById(mMainFrameLayout.getId()) != null) {
-        transaction.replace(mMainFrameLayout.getId(), mBusStopSearchFragment);
-      } else {
-        transaction.add(mMainFrameLayout.getId(), mBusStopSearchFragment);
-      }
-      transaction.addToBackStack(null);
-      transaction.commit();
+  public void onBusStopClicked() {
+    if (mDepartureFragment == null) {
+      mDepartureFragment = new DepartureFragment();
     }
-  }
 
-  @Override
-  public void onBusStopSelected() {
-    if (mMainFrameLayout != null) {
-      FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-      BusDeparturesFragment frag = new BusDeparturesFragment();
-      if (getSupportFragmentManager().findFragmentById(mMainFrameLayout.getId()) != null) {
-        transaction.replace(mMainFrameLayout.getId(), frag);
-      } else {
-        transaction.add(mMainFrameLayout.getId(), frag);
-      }
-      transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-      transaction.addToBackStack(null);
-      transaction.commit();
-    }
+    replaceFragment(mDepartureFragment);
   }
 
   @Override
@@ -140,7 +132,12 @@ public class MainActivity extends AppCompatActivity implements OnInternetConnect
 
   @Override
   public void onDepartureClicked() {
-    mBusRouteFragment = new BusRouteFragment();
-    performFragmentOperation(mBusRouteFragment);
+    mRouteFragment = new RouteFragment();
+    performFragmentOperation(mRouteFragment);
+  }
+
+  @Override
+  public AndroidInjector<Fragment> supportFragmentInjector() {
+    return dispatchingAndroidInjector;
   }
 }
