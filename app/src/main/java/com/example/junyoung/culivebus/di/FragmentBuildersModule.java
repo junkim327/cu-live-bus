@@ -1,8 +1,9 @@
 package com.example.junyoung.culivebus.di;
 
-import com.example.junyoung.culivebus.fragment.BusDeparturesFragment;
+import com.example.junyoung.culivebus.fragment.DepartureFragment;
 import com.example.junyoung.culivebus.fragment.DashboardFragment;
-import com.example.junyoung.culivebus.ui.stopsearch.BusStopSearchFragment;
+import com.example.junyoung.culivebus.ui.download.DownloadFragment;
+import com.example.junyoung.culivebus.ui.search.SearchFragment;
 
 import dagger.Module;
 import dagger.android.ContributesAndroidInjector;
@@ -10,11 +11,14 @@ import dagger.android.ContributesAndroidInjector;
 @Module
 public abstract class FragmentBuildersModule {
   @ContributesAndroidInjector
+  abstract DownloadFragment contributeDownloadFragment();
+
+  @ContributesAndroidInjector
   abstract DashboardFragment contributeDashboardFragment();
 
   @ContributesAndroidInjector
-  abstract BusStopSearchFragment contributeBusStopSearchFragment();
+  abstract SearchFragment contributeBusStopSearchFragment();
 
   @ContributesAndroidInjector
-  abstract BusDeparturesFragment contributeBusDeparturesFragment();
+  abstract DepartureFragment contributeBusDeparturesFragment();
 }
