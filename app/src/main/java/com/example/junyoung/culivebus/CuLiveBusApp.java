@@ -4,16 +4,17 @@ import android.app.Activity;
 import android.app.Application;
 import android.util.Log;
 
-import com.example.junyoung.culivebus.di.AppInjector;
+import com.example.junyoung.culivebus.di.DaggerAppComponent;
+import com.jakewharton.threetenabp.AndroidThreeTen;
 
 import javax.inject.Inject;
 
 import dagger.android.AndroidInjector;
+import dagger.android.DaggerApplication;
 import dagger.android.DispatchingAndroidInjector;
-import dagger.android.HasActivityInjector;
 import timber.log.Timber;
 
-public class CuLiveBusApp extends Application implements HasActivityInjector {
+public class CuLiveBusApp extends DaggerApplication {
   @Inject
   DispatchingAndroidInjector<Activity> dispatchingAndroidInjector;
 
@@ -23,11 +24,13 @@ public class CuLiveBusApp extends Application implements HasActivityInjector {
     if (BuildConfig.DEBUG) {
       Timber.plant(new Timber.DebugTree());
     }
-    AppInjector.init(this);
+    //LeakCanary.install(this);
+    //AppInjector.init(this);
+    AndroidThreeTen.init(this);
   }
 
   @Override
-  public AndroidInjector<Activity> activityInjector() {
-    return dispatchingAndroidInjector;
+  protected AndroidInjector<? extends DaggerApplication> applicationInjector() {
+    return DaggerAppComponent.builder().create(this);
   }
 }

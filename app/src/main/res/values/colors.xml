@@ -9,7 +9,10 @@
     <color name="colorPrimary">#2EC795</color>
     <color name="colorPrimaryDark">#009567</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="white">#ffffff</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_80">#CCFFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="scrim">#33000000</color> <!-- 20% black -->
     <color name="textMainColor">#de000000</color>
     <color name="textSubColor">#99000000</color>
     <color name="constraint_layout_background_color">#efefef</color>
@@ -18,7 +21,7 @@
     <color name="bottom_sheet_distance_textview_color">#f44242</color>
 
     <color name="progressbar_color">#FFFFFF</color>
-    <color name="less_walking_text_color">#3087EB</color>
+    <color name="fastest_text_color">#3087EB</color>
 
     <color name="search_bar_hint_color">#CCFFFFFF</color>
 
@@ -46,4 +49,14 @@
     <!-- Cards -->
 
     <!-- Cards -->
+
+    <color name="download_progress_bar_color_1">#0F2027</color>
+    <color name="download_progress_bar_color_2">#203A43</color>
+    <color name="download_progress_bar_color_3">#2C5364</color>
+
+    <integer-array name="download_progress_bar_colors">
+        <item>@color/download_progress_bar_color_1</item>
+        <item>@color/download_progress_bar_color_2</item>
+        <item>@color/download_progress_bar_color_3</item>
+    </integer-array>
 </resources>

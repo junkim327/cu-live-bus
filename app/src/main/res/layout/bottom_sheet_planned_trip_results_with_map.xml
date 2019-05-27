@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bottom_sheet_in_planned_trip_results_with_map_fragment"
@@ -9,7 +9,7 @@
     android:elevation="16dp"
     app:layout_behavior="@string/bottom_sheet_behavior">
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint_layout_planned_trip_results"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -49,7 +49,7 @@
             app:layout_constraintBaseline_toBaselineOf="@+id/textview_travel_time_bottom_sheet_planned_trip_results"
             app:layout_constraintStart_toEndOf="@+id/textview_travel_time_bottom_sheet_planned_trip_results" />
 
-        <android.support.v7.widget.RecyclerView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerview_bus_info_bottom_sheet_planned_trip_results"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -89,9 +89,9 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/view" />
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
@@ -109,7 +109,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <android.support.v7.widget.RecyclerView
+            <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerview_planned_trip_info_bottom_sheet_planned_trip_results"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -120,8 +120,8 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:listitem="@layout/card_bus_planned_trip_results_with_map">
 
-            </android.support.v7.widget.RecyclerView>
+            </androidx.recyclerview.widget.RecyclerView>
         </LinearLayout>
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

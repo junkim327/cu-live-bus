@@ -1,19 +1,21 @@
 package com.example.junyoung.culivebus.httpclient.pojos;
 
+import com.example.junyoung.culivebus.vo.response.VehicleResponse;
+
 public class PathAndVehicle {
   private Path path;
-  private VehicleData vehicleData;
+  private VehicleResponse vehicleResponse;
 
-  public PathAndVehicle(Path path, VehicleData vehicleData) {
+  public PathAndVehicle(Path path, VehicleResponse vehicleResponse) {
     this.path = path;
-    this.vehicleData = vehicleData;
+    this.vehicleResponse = vehicleResponse;
   }
 
   public Path getPath() {
     return path;
   }
 
-  public VehicleData getVehicleData() {
-    return vehicleData;
+  public VehicleResponse getVehicleResponse() {
+    return vehicleResponse;
   }
 }

@@ -1,446 +1,182 @@
 package com.example.junyoung.culivebus.ui.nearbystop;
 
 import android.Manifest;
-import android.arch.lifecycle.ViewModelProviders;
-import android.content.Context;
+
+import androidx.databinding.DataBindingUtil;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProviders;
+
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.BottomSheetBehavior;
-import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.NavUtils;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.example.junyoung.culivebus.databinding.NearByStopFragmentBinding;
+import com.example.junyoung.culivebus.db.entity.StopPoint;
+import com.example.junyoung.culivebus.ui.MainNavigationFragment;
+import com.example.junyoung.culivebus.ui.common.NavigationController;
+import com.example.junyoung.culivebus.util.AutoClearedValue;
+import com.google.android.gms.maps.MapView;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import androidx.core.content.ContextCompat;
+
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
-import android.widget.TextView;
 
 import com.example.junyoung.culivebus.R;
-import com.example.junyoung.culivebus.adapter.BusStopInfoWindowAdapter;
-import com.example.junyoung.culivebus.httpclient.pojos.Stop;
-import com.example.junyoung.culivebus.room.entity.StopPoint;
-import com.example.junyoung.culivebus.ui.viewmodel.BusStopViewModel;
-import com.example.junyoung.culivebus.ui.viewmodel.SharedStopPointViewModel;
-import com.example.junyoung.culivebus.util.UtilConnection;
-import com.example.junyoung.culivebus.util.listener.OnInternetConnectedListener;
-import com.example.junyoung.culivebus.vo.Response;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.GoogleMap.OnMyLocationButtonClickListener;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.ClusterManager.OnClusterClickListener;
+import com.google.maps.android.clustering.ClusterManager.OnClusterItemClickListener;
+import com.google.maps.android.clustering.ClusterManager.OnClusterItemInfoWindowClickListener;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
+import javax.inject.Inject;
 
-import static android.support.design.widget.BottomSheetBehavior.STATE_COLLAPSED;
-import static android.support.design.widget.BottomSheetBehavior.STATE_EXPANDED;
-import static android.view.View.INVISIBLE;
-import static android.view.View.VISIBLE;
+import dagger.android.support.DaggerFragment;
+import timber.log.Timber;
 
-public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
-  GoogleMap.OnCameraIdleListener,
-  GoogleMap.OnMarkerClickListener,
-  GoogleMap.OnInfoWindowClickListener,
-  GoogleMap.OnMyLocationButtonClickListener {
-  private static final String TAG = NearByStopFragment.class.getSimpleName();
+public class NearByStopFragment extends DaggerFragment implements MainNavigationFragment,
+  OnClusterClickListener<StopPoint>,
+  OnClusterItemClickListener<StopPoint>,
+  OnClusterItemInfoWindowClickListener<StopPoint>,
+  OnMyLocationButtonClickListener {
+  private static final String MAPVIEW_BUNDLE_KEY = "MapViewBundleKey";
+  private static final LatLng DEFAULT_LATLNG = new LatLng(40.109659, -88.227159);
 
-  private int mToolbarHeight;
-  private String mUserLatitude;
-  private String mUserLongitude;
-  private boolean mIsInternetConnected;
+  @Inject
+  ViewModelProvider.Factory viewModelFactory;
+  @Inject
+  NavigationController navigationController;
 
-  private StopPoint mSelectedStopPoint;
 
-  private GoogleMap mMap;
-  private Unbinder mUnbinder;
-  private Snackbar mSnackbar;
-  private ConnectivityManager mConnectivityManager;
-  private BottomSheetBehavior mBottomSheetBehavior;
 
-  // ViewModels
-  private BusStopViewModel mBusStopViewModel;
-  private SharedStopPointViewModel mSharedStopPointViewModel;
-
-  // Callback
-  private OnBusStopClickedListener mOnBusStopClickedCallback;
-  private OnInternetConnectedListener mInternetConnectedCallback;
-
-  @BindView(R.id.coordinator_layout_near_by_stop)
-  CoordinatorLayout mCoordinatorLayout;
-  @BindView(R.id.toolbar_near_by_stop)
-  Toolbar mToolbar;
-
-  // Bottom Sheet Components
-  @BindView(R.id.bottom_sheet_near_by_stop)
-  ConstraintLayout mBottomSheet;
-  @BindView(R.id.textview_bus_stop_name_bottom_sheet)
-  TextView mBusStopNameTextView;
-  @BindView(R.id.textview_bus_stop_code_bottom_sheet)
-  TextView mBusStopCodeTextView;
-  @BindView(R.id.button_bus_departures_bottom_sheet)
-  ImageButton mBusDepartureButton;
-
-  public interface OnBusStopClickedListener {
-    void onBusStopClicked();
-  }
-
-  @Override
-  public void onAttach(Context context) {
-    super.onAttach(context);
-
-    Log.d(TAG, "onAttach has called.");
-
-    try {
-      mInternetConnectedCallback = (OnInternetConnectedListener) context;
-    } catch (ClassCastException e) {
-      throw new ClassCastException(context.toString()
-        + " must implement OnInternetConnectedListener.");
-    }
-
-    try {
-      mOnBusStopClickedCallback = (OnBusStopClickedListener) context;
-    } catch (ClassCastException e) {
-      throw new ClassCastException(context.toString()
-        + " must implement OnBusStopClickedListener.");
-    }
-  }
+  private GoogleMap map;
+  private MapView mapView;
+  private Bundle mapViewBundle;
+  private NearByStopViewModel nearByStopViewModel;
+  private BottomSheetBehavior bottomSheetBehavior;
+  private ClusterManager<StopPoint> clusterManager;
 
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState) {
+    Timber.d("onCreate has been called");
     super.onCreate(savedInstanceState);
 
-    Log.d(TAG, "onCreate has called.");
-
-    if (getActivity() != null) {
-      mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
-        Context.CONNECTIVITY_SERVICE
-      );
+    if (savedInstanceState != null) {
+      mapViewBundle = savedInstanceState.getBundle(MAPVIEW_BUNDLE_KEY);
     }
-
-    mToolbarHeight = getResources().getDimensionPixelSize(R.dimen.small_size_toolbar_height);
   }
 
   @Nullable
   @Override
   public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-    checkInternetConnection();
+    Timber.d("onCreateView has been called");
 
-    Log.d(TAG, "onCreateView has called.");
+    nearByStopViewModel = ViewModelProviders.of(this, viewModelFactory)
+      .get(NearByStopViewModel.class);
+    NearByStopFragmentBinding dataBinding = DataBindingUtil
+      .inflate(inflater, R.layout.fragment_near_by_stop, container, false);
+    dataBinding.setNearByStopViewModel(nearByStopViewModel);
+    dataBinding.setLifecycleOwner(getViewLifecycleOwner());
 
-    View view = null;
-    if (mIsInternetConnected) {
-      view = inflater.inflate(R.layout.fragment_near_by_stop, container, false);
-      mUnbinder = ButterKnife.bind(this, view);
-
-      setToolbar();
-      loadMapFragment();
-      setBottomSheetBehavior();
-    }
-
-    return view;
-  }
-
-  private void checkInternetConnection() {
-    mIsInternetConnected = true;
-    if (mConnectivityManager != null) {
-      mIsInternetConnected = UtilConnection.isInternetConnected(mConnectivityManager,
-        mInternetConnectedCallback, false);
-    }
-  }
-
-  private void setToolbar() {
-    mToolbar.setTitleTextColor(getResources().getColor(R.color.white));
-
-    if (getActivity() != null) {
-      ((AppCompatActivity) getActivity()).setSupportActionBar(mToolbar);
-
-      ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-      if (actionBar != null) {
-        setHasOptionsMenu(true);
-
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back);
-        actionBar.setTitle(getResources().getString(R.string.toolbar_title_near_by_stop_fragment));
+    dataBinding.bottomSheet.departureButton.setOnClickListener(view -> {
+      StopPoint stopPoint = nearByStopViewModel.getClickedStopPoint().getValue();
+      if (stopPoint != null) {
+        navigationController.navigateToDepartureActivity(stopPoint);
       }
-    }
-  }
+    });
 
-  private void setBottomSheetBehavior() {
-    mBottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
-    mBottomSheetBehavior.setPeekHeight(0);
-    mBottomSheetBehavior.setState(STATE_COLLAPSED);
-  }
+    mapView = dataBinding.mapView;
+    mapView.onCreate(mapViewBundle);
+    initializeMap();
 
-  private void loadMapFragment() {
-    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-      .findFragmentById(R.id.map_near_by_stop);
-    if (mapFragment != null) {
-      mapFragment.getMapAsync(this);
-    }
-
-    if (mapFragment != null && mapFragment.getView() != null) {
-      mapFragment.getView().setVisibility(INVISIBLE);
-    }
-  }
-
-  @Override
-  public void onMapReady(GoogleMap googleMap) {
-    mMap = googleMap;
-
-    mMap.setPadding(0, mToolbarHeight, 0, 0);
-
-    BusStopInfoWindowAdapter infoWindowAdapter = new BusStopInfoWindowAdapter(getActivity());
-    mMap.setInfoWindowAdapter(infoWindowAdapter);
-
-    drawOnTheMap();
-
-    mMap.setOnCameraIdleListener(this);
-    mMap.setOnMarkerClickListener(this);
-    mMap.setOnInfoWindowClickListener(this);
-    mMap.setOnMyLocationButtonClickListener(this);
-  }
-
-  private void drawOnTheMap() {
-    mUserLatitude = getResources().getString(R.string.illini_union_latitude);
-    mUserLongitude = getResources().getString(R.string.illini_union_longitude);
-
-    if (getContext() != null && ContextCompat.checkSelfPermission(getContext(),
-      Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-      mMap.setMyLocationEnabled(true);
-
-      if (getActivity() != null) {
-        FusedLocationProviderClient fusedLocationProviderClient =
-          LocationServices.getFusedLocationProviderClient(getActivity());
-        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(getActivity(),
-          location -> {
-            if (location != null) {
-              mUserLatitude = String.valueOf(location.getLatitude());
-              mUserLongitude = String.valueOf(location.getLongitude());
-
-              mBusStopViewModel.loadNearBusStopList(mUserLatitude, mUserLongitude);
-              animateCamera();
-            }
-          });
-      }
-    } else {
-      mBusStopViewModel.loadNearBusStopList(mUserLatitude, mUserLongitude);
-      animateCamera();
-    }
-  }
-
-  private void animateCamera() {
-    if (mSelectedStopPoint == null) {
-      if (mUserLatitude != null && mUserLongitude != null) {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
-          new LatLng(Double.valueOf(mUserLatitude), Double.valueOf(mUserLongitude)), 16.0f)
-        );
-      }
-    }
-  }
-
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-
-    Log.d(TAG, "onActivityCreated has called.");
-
-    if (mSelectedStopPoint != null) {
-      mBusStopNameTextView.setText(mSelectedStopPoint.getStopName());
-      mBusStopCodeTextView.setText(mSelectedStopPoint.getStopCode());
-    }
-
-    if (mBusStopViewModel == null) {
-      mBusStopViewModel = ViewModelProviders.of(this).get(BusStopViewModel.class);
-      mBusStopViewModel.getBusStopList().observe(this, this::processResponse);
-    }
-
-      if (getActivity() != null && mSharedStopPointViewModel == null) {
-        mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
-          .get(SharedStopPointViewModel.class);
-      }
-  }
-
-  @Override
-  public void onSaveInstanceState(@NonNull Bundle outState) {
-    super.onSaveInstanceState(outState);
-    outState.putInt("hello", 1);
-  }
-
-  private void processResponse(Response<List<Stop>> response) {
-    switch (response.mStatus) {
-      case SUCCESS:
-        if (response.mData != null) {
-          Log.d(TAG, "SUCCESS");
-          Log.d(TAG, "DATA SIZE: " + response.mData.size());
-          createBusStopMarkers(response.mData);
-        }
-        break;
-      case ERROR:
-        showErrorMessage();
-        response.mError.printStackTrace();
-        break;
-    }
-  }
-
-  private void createBusStopMarkers(List<Stop> busStopList) {
-    MarkerOptions options = new MarkerOptions()
-      .icon(BitmapDescriptorFactory.fromResource(R.drawable.google_map_custom_marker));
-
-    for (int i = 0; i < busStopList.size(); i++) {
-      ArrayList<StopPoint> stopPoints = busStopList.get(i).getStopPoints();
-      for (StopPoint stopPoint : stopPoints) {
-        LatLng markerPosition = new LatLng(
-          stopPoint.getLatitude(),
-          stopPoint.getLongitude()
-        );
-
-        Marker marker = mMap.addMarker(options.position(markerPosition));
-        marker.setTag(stopPoint);
-      }
-    }
-
-    /*
-    if (!isFragmentVisible) {
-      isFragmentVisible = true;
-      SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-        .findFragmentByTag(MAP_FRAGMENT_TAG);
-      FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-      fragmentTransaction.show(mapFragment);
-      fragmentTransaction.commit();
-    }*/
-  }
-
-  private void showErrorMessage() {
-    if (mSnackbar == null) {
-      mSnackbar = Snackbar.make(mCoordinatorLayout, R.string.snack_bar_network_error_message,
-        Snackbar.LENGTH_INDEFINITE)
-        .setAction("RETRY", view -> {
-          if (mMap != null) {
-            LatLng cameraPosition = mMap.getCameraPosition().target;
-            mBusStopViewModel.loadNearBusStopList(
-              String.valueOf(cameraPosition.latitude),
-              String.valueOf(cameraPosition.longitude)
-            );
-          }
-        });
-    }
-
-    if (mBottomSheetBehavior.getState() == STATE_EXPANDED) {
-      mBottomSheetBehavior.setState(STATE_COLLAPSED);
-    }
-    mSnackbar.show();
-  }
-
-  @Override
-  public void onStart() {
-    super.onStart();
-
-    Log.d(TAG, "onStart has called.");
-  }
-
-  @Override
-  public void onResume() {
-    super.onResume();
-
-    Log.d(TAG, "onResume has called.");
-
-    checkInternetConnection();
-
-    setMapVisible();
-
-    mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+    // Initialize bottom sheet behavior.
+    bottomSheetBehavior = BottomSheetBehavior.from(dataBinding.bottomSheet.layout);
+    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
       @Override
       public void onStateChanged(@NonNull View view, int i) {
 
       }
 
       @Override
-      public void onSlide(@NonNull View view, float v) {
-        int bottomSheetHeight = mBottomSheet.getHeight();
+      public void onSlide(@NonNull View view, float slideOffset) {
+        // Calculate the bottom padding of map view.
+        int bottomSheetHeight = dataBinding.bottomSheet.layout.getHeight();
         if (bottomSheetHeight != 0) {
-          int bottomPadding = (int) (bottomSheetHeight * v);
-          mMap.setPadding(0, mToolbarHeight, 0, bottomPadding);
+          int paddingBottom = (int) (bottomSheetHeight * slideOffset);
+          nearByStopViewModel.setMapPaddingBottom(paddingBottom);
         }
       }
     });
-  }
 
-  private void setMapVisible() {
-    SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-      .findFragmentById(R.id.map_near_by_stop);
-    if (mapFragment != null && mapFragment.getView() != null) {
-      mapFragment.getView().setVisibility(VISIBLE);
-    }
+    return dataBinding.getRoot();
   }
 
   @Override
-  public void onCameraIdle() {
-    Log.d(TAG, "onCameraIdle has called");
-    LatLng cameraCurrentLatLng = mMap.getCameraPosition().target;
+  public void onSaveInstanceState(@NonNull Bundle outState) {
+    super.onSaveInstanceState(outState);
 
-    mBusStopViewModel.loadNearBusStopList(
-      String.valueOf(cameraCurrentLatLng.latitude),
-      String.valueOf(cameraCurrentLatLng.longitude)
-    );
+    Bundle mapViewBundle = outState.getBundle(MAPVIEW_BUNDLE_KEY);
+    if (mapViewBundle == null) {
+      mapViewBundle = new Bundle();
+      outState.putBundle(MAPVIEW_BUNDLE_KEY, mapViewBundle);
+    }
+
+    mapView.onSaveInstanceState(mapViewBundle);
   }
 
   @Override
-  public boolean onMarkerClick(Marker marker) {
-    // If the user marker clicked, then don't open the info window.
-    /*
-    if (marker.getId().equals(userMarkerId)) {
-      marker.hideInfoWindow();
-      return true;
-    }*/
-
-    Log.d(TAG, "Marker clicked.");
-
-    mSelectedStopPoint = (StopPoint) marker.getTag();
-
-    if (mSelectedStopPoint != null) {
-      mBusStopNameTextView.setText(mSelectedStopPoint.getStopName());
-      mBusStopCodeTextView.setText(mSelectedStopPoint.getStopCode());
-    }
-
-    if (mSnackbar != null && mSnackbar.isShown()) {
-      mSnackbar.dismiss();
-    }
-    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
-
-    return false;
+  public Boolean onBackPressed() {
+    return null;
   }
 
   @Override
-  public void onInfoWindowClick(Marker marker) {
-    StopPoint stopPoint = (StopPoint) marker.getTag();
-    if (stopPoint != null) {
-      mSharedStopPointViewModel.select(stopPoint);
-    }
-    mOnBusStopClickedCallback.onBusStopClicked();
+  public void onStart() {
+    Timber.d("onStart has been called");
+    super.onStart();
+    mapView.onStart();
+  }
+
+  @Override
+  public void onResume() {
+    Timber.d("onResume has called.");
+    super.onResume();
+    mapView.onResume();
+  }
+
+  @Override
+  public void onStop() {
+    Timber.d("onStop has been called");
+    super.onStop();
+    mapView.onStop();
+  }
+
+  @Override
+  public void onPause() {
+    super.onPause();
+    mapView.onPause();
+  }
+
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    mapView.onDestroy();
+  }
+
+  @Override
+  public void onLowMemory() {
+    super.onLowMemory();
+    mapView.onLowMemory();
   }
 
   @Override
@@ -448,39 +184,76 @@ public class NearByStopFragment extends Fragment implements OnMapReadyCallback,
     return false;
   }
 
-  @OnClick(R.id.button_bus_departures_bottom_sheet)
-  public void clickBusDeparturesButton() {
-    if (mSelectedStopPoint != null) {
-      mSharedStopPointViewModel.select(mSelectedStopPoint);
-    }
-    mOnBusStopClickedCallback.onBusStopClicked();
+  @Override
+  public boolean onClusterClick(Cluster<StopPoint> cluster) {
+    nearByStopViewModel.setClusterClickEvent(cluster.getPosition());
+    return true;
   }
 
   @Override
-  public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-    super.onCreateOptionsMenu(menu, inflater);
+  public boolean onClusterItemClick(StopPoint stopPoint) {
+    nearByStopViewModel.onClusterItemClick(stopPoint);
+    return false;
   }
 
   @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId()) {
-      case android.R.id.home:
-        if (getActivity() != null) {
-          NavUtils.navigateUpFromSameTask(getActivity());
+  public void onClusterItemInfoWindowClick(StopPoint stopPoint) {
+    navigationController.navigateToDepartureActivity(stopPoint);
+  }
+
+  private void initializeMap() {
+    mapView.getMapAsync(googleMap -> {
+      map = googleMap;
+      checkLocationPermission();
+      googleMap.setInfoWindowAdapter(new BusStopInfoWindowAdapter(getActivity()));
+
+      nearByStopViewModel.getBusStops().observe(getViewLifecycleOwner(), new Observer<List<StopPoint>>() {
+        @Override
+        public void onChanged(List<StopPoint> stopPoints) {
+          initClusterManager(stopPoints);
         }
-
-        return true;
-    }
-    return super.onOptionsItemSelected(item);
+      });
+    });
   }
 
-  @Override
-  public void onDestroyView() {
-    super.onDestroyView();
+  private void initClusterManager(List<StopPoint> stopPoints) {
+    clusterManager = new ClusterManager<>(getActivity(), map);
+    clusterManager.setRenderer(new BusStopMarkerRenderer(getContext(), map, clusterManager));
 
-    if (mUnbinder != null) {
-      mUnbinder.unbind();
-      mUnbinder = null;
+    map.setOnCameraIdleListener(clusterManager);
+    map.setOnMarkerClickListener(clusterManager);
+    map.setOnInfoWindowClickListener(clusterManager);
+    clusterManager.setOnClusterClickListener(this);
+    clusterManager.setOnClusterItemClickListener(this);
+    clusterManager.setOnClusterItemInfoWindowClickListener(this);
+
+    clusterManager.addItems(stopPoints);
+    clusterManager.cluster();
+  }
+
+  private void checkLocationPermission() {
+    if (getContext() != null && ContextCompat.checkSelfPermission(getContext(),
+      Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+      Timber.d("Permission Granted");
+      map.setMyLocationEnabled(true);
+
+      if (getActivity() != null) {
+        FusedLocationProviderClient fusedLocationProviderClient =
+          LocationServices.getFusedLocationProviderClient(getActivity());
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(getActivity(),
+          location -> {
+            if (location != null) {
+              Timber.d("moveCamera");
+              LatLng userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+              nearByStopViewModel.setLatLng(userLatLng);
+            } else {
+              Timber.d("location null");
+              nearByStopViewModel.setLatLng(DEFAULT_LATLNG);
+            }
+          });
+      }
+    } else {
+      nearByStopViewModel.setLatLng(DEFAULT_LATLNG);
     }
   }
 }

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data class="SearchHistoryFragmentBinding">
+        <variable
+            name="sharedPlaceViewModel"
+            type="com.example.junyoung.culivebus.ui.direction.SharedPlaceViewModel"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:elevation="4dp"
+            android:minHeight="?attr/actionBarSize"
+            android:theme="@style/Theme.CuLiveBus.Toolbar"
+            app:layout_constraintBottom_toTopOf="@+id/searchedPlaceList"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:title="Recent searches" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/searchedPlaceList"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            tools:listitem="@layout/card_searched_place"
+            tools:itemCount="3"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

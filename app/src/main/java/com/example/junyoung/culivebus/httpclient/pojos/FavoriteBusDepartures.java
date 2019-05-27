@@ -1,8 +1,9 @@
 package com.example.junyoung.culivebus.httpclient.pojos;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.example.junyoung.culivebus.room.entity.UserSavedBusStop;
+import com.example.junyoung.culivebus.vo.SortedDeparture;
 
 public class FavoriteBusDepartures {
   private boolean mIsBusDeparture;

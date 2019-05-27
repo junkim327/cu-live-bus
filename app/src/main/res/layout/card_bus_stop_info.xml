@@ -1,64 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="86dp"
-    android:background="@android:color/white"
-    android:paddingStart="16dp"
-    android:paddingTop="16dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="16dp"
-    android:translationZ="6dp">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable name="stopPoint" type="com.example.junyoung.culivebus.db.entity.StopPoint"/>
+    </data>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layout"
+        android:layout_width="match_parent"
+        android:layout_height="86dp"
+        android:background="@android:color/white"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp"
+        android:translationZ="6dp">
 
-    <TextView
-        android:id="@+id/text_bus_stop_name_card_bus_stop_info"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginEnd="8dp"
-        android:ellipsize="end"
-        android:fontFamily="@font/oxygen_bold"
-        android:singleLine="true"
-        android:text="@string/no_info"
-        android:textColor="@color/textMainColor"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/text_bus_stop_code_card_bus_stop_info"
-        app:layout_constraintEnd_toStartOf="@+id/button_bus_departures_card_bus_stop_info"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/text_bus_stop_name_card_bus_stop_info"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/oxygen_bold"
+            android:singleLine="true"
+            android:text="@{stopPoint.stopName ?? @string/no_info}"
+            android:textColor="@color/textMainColor"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toTopOf="@+id/text_bus_stop_code_card_bus_stop_info"
+            app:layout_constraintEnd_toStartOf="@+id/button_bus_departures_card_bus_stop_info"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/text_bus_stop_code_card_bus_stop_info"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/text_bus_stop_name_card_bus_stop_info"
-        android:layout_alignStart="@+id/text_bus_stop_name_card_bus_stop_info"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:fontFamily="@font/oxygen"
-        android:singleLine="true"
-        android:text="@string/no_info"
-        android:textColor="@color/textSubColor"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button_bus_departures_card_bus_stop_info"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_bus_stop_name_card_bus_stop_info" />
+        <TextView
+            android:id="@+id/text_bus_stop_code_card_bus_stop_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/text_bus_stop_name_card_bus_stop_info"
+            android:layout_alignStart="@+id/text_bus_stop_name_card_bus_stop_info"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="@font/oxygen"
+            android:singleLine="true"
+            android:text="@{stopPoint.stopCode ?? @string/no_info}"
+            android:textColor="@color/textSubColor"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/button_bus_departures_card_bus_stop_info"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/text_bus_stop_name_card_bus_stop_info" />
 
-    <ImageButton
-        android:id="@+id/button_bus_departures_card_bus_stop_info"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_alignParentTop="false"
-        android:layout_alignParentEnd="false"
-        android:layout_alignParentBottom="false"
-        android:background="@android:color/transparent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/bus_departure_button_image" />
+        <ImageButton
+            android:id="@+id/button_bus_departures_card_bus_stop_info"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentTop="false"
+            android:layout_alignParentEnd="false"
+            android:layout_alignParentBottom="false"
+            android:background="@android:color/transparent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/bus_departure_button_image" />
 
-</android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

@@ -16,7 +16,7 @@ import dagger.android.support.AndroidSupportInjection;
 import dagger.android.support.HasSupportFragmentInjector;
 
 public class AppInjector {
-  private AppInjector() {}
+  /*private AppInjector() {}
   public static void init(CuLiveBusApp cuLiveBusApp) {
     DaggerAppComponent.builder().application(cuLiveBusApp)
       .build().inject(cuLiveBusApp);
@@ -75,5 +75,5 @@ public class AppInjector {
             }
           }, true);
     }
-  }
+  }*/
 }

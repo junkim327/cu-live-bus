@@ -1,17 +1,16 @@
 package com.example.junyoung.culivebus;
 
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import android.util.Log;
 
-import com.example.junyoung.culivebus.adapter.EditFavoritesAdapter;
 import com.example.junyoung.culivebus.adapter.ItemLongClickHelperAdapter;
 
 public class ItemLongClickHelperCallback extends ItemTouchHelper.Callback {
-  private final ItemLongClickHelperAdapter adapter;
+  private RecyclerView.Adapter adapter;
 
-  public ItemLongClickHelperCallback(EditFavoritesAdapter adapter) {
-    this.adapter = adapter;
+  public ItemLongClickHelperCallback(RecyclerView.Adapter adapter) {
+    //this.adapter = adapter;
   }
 
   @Override
@@ -34,7 +33,7 @@ public class ItemLongClickHelperCallback extends ItemTouchHelper.Callback {
 
   @Override
   public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-    adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
+    //adapter.onItemMove(viewHolder.getAdapterPosition(), target.getAdapterPosition());
     Log.d("onMove", " is called multipletimes");
 
     return true;

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <import type="com.example.junyoung.culivebus.vo.Status"/>
+        <variable
+            name="viewModel"
+            type="com.example.junyoung.culivebus.ui.departure.DepartureViewModel"/>
+        <variable name="numFavoriteStops" type="int"/>
+        <variable name="isFavoriteStop" type="boolean"/>
+        <variable name="resourceStatus" type="Status"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:orientation="vertical"
+        android:paddingTop="56dp"
+        tools:layout_editor_absoluteY="25dp">
+
+        <TextView
+            android:id="@+id/busStopCode"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@{viewModel.stopPoint.stopCode ?? @string/no_info}"
+            android:textAppearance="@style/TextAppearance.CuLiveBus.Small.Inverse"
+            app:layout_constraintBottom_toTopOf="@+id/busStopName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            tools:text="@string/stop_code_for_testing" />
+
+        <TextView
+            android:id="@+id/busStopName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/busStopCode"
+            android:layout_centerInParent="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@{viewModel.stopPoint.stopName ?? @string/no_info}"
+            android:textAppearance="@style/TextAppearance.CuLiveBus.Title"
+            app:layout_constraintBottom_toTopOf="@+id/toggle_button_bus_departures"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/busStopCode"
+            tools:text="Campus Circle (North Side)" />
+
+        <ToggleButton
+            android:id="@+id/toggle_button_bus_departures"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/toggle_image"
+            android:checked="@{viewModel.stopIdList.contains(viewModel.stopPoint.stopId)}"
+            android:onClick="@{(view) -> viewModel.favoriteButtonClicked(view, viewModel.stopPoint)}"
+            android:textOff=" "
+            android:textOn=" "
+            app:layout_constraintBottom_toTopOf="@+id/mapView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/busStopName"
+            app:stopIdList="@{viewModel.stopIdList}"
+            app:stopId="@{viewModel.stopPoint.stopId}"/>
+
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            app:layout_constraintBottom_toTopOf="@+id/frameLayout"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toggle_button_bus_departures"
+            app:cameraZoom="17"
+            app:liteMode="true"
+            app:mapType="normal"
+            app:isMapToolbarEnabled="@{false}"
+            app:markerLat="@{viewModel.stopPoint.latitude}"
+            app:markerLon="@{viewModel.stopPoint.longitude}">
+
+        </com.google.android.gms.maps.MapView>
+
+        <FrameLayout
+            android:id="@+id/frameLayout"
+            android:layout_width="0dp"
+            android:layout_height="4dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/mapView">
+
+            <ProgressBar
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="13dp"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                android:indeterminateTint="@color/white"
+                app:visibleGone="@{viewModel.departures.status != Status.LOADING}"/>
+
+        </FrameLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

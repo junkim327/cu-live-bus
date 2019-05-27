@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data class="DepartureCardBinding">
+        <import type="androidx.lifecycle.LiveData" />
+        <import type="org.threeten.bp.Duration" />
+        <variable name="departure" type="com.example.junyoung.culivebus.vo.SortedDeparture" />
+        <variable name="destination" type="String" />
+        <variable name="duration1" type="LiveData&lt;Duration&gt;" />
+        <variable name="duration2" type="LiveData&lt;Duration&gt;" />
+    </data>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/card_bus_departures"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:elevation="4dp"
+            android:paddingStart="16dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="12dp">
+
+            <TextView
+                android:id="@+id/text_headsign_departure_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@{departure.headSign ?? @string/no_info}"
+                android:textAlignment="textStart"
+                android:textColor="@color/textMainColor"
+                android:textSize="18sp"
+                app:layout_constraintBottom_toTopOf="@+id/text_destination_departure_card"
+                app:layout_constraintEnd_toStartOf="@+id/ticker_one_card_bus_departures"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="spread_inside"
+                tools:text="220S Illini" />
+
+            <TextView
+                android:id="@+id/text_destination_departure_card"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:fontFamily="@font/oxygen"
+                android:singleLine="true"
+                android:text="@{@string/bus_direction_info(departure.tripList.get(0).tripHeadSign) ?? @string/no_info}"
+                android:textAlignment="textStart"
+                android:textColor="@color/textSubColor"
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/ticker_two_card_bus_departures"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="@+id/text_headsign_departure_card"
+                app:layout_constraintTop_toBottomOf="@+id/text_headsign_departure_card"
+                tools:text="@string/very_long_text_for_testing" />
+
+            <TextView
+                android:id="@+id/ticker_one_card_bus_departures"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="@font/roboto_mono"
+                android:letterSpacing="-0.05"
+                android:textAlignment="textEnd"
+                android:textColor="@color/textMainColor"
+                android:textSize="15sp"
+                android:typeface="monospace"
+                app:duration="@{duration1}"
+                app:layout_constraintBottom_toBottomOf="@+id/text_headsign_departure_card"
+                app:layout_constraintEnd_toStartOf="@+id/toggleButton"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="1.0"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="6m 15s" />
+
+            <TextView
+                android:id="@+id/ticker_two_card_bus_departures"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:fontFamily="@font/roboto_mono"
+                android:letterSpacing="-0.05"
+                android:text="@string/no_info"
+                android:textAlignment="textEnd"
+                android:textColor="@color/textMainColor"
+                android:textSize="15sp"
+                android:typeface="monospace"
+                app:duration="@{duration2}"
+                app:layout_constraintBaseline_toBaselineOf="@+id/text_destination_departure_card"
+                app:layout_constraintEnd_toStartOf="@+id/toggleButton"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/text_destination_departure_card"
+                tools:text="1m 25s" />
+
+            <ToggleButton
+                android:id="@+id/toggleButton"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginBottom="8dp"
+                android:background="@drawable/toggle_notification"
+                android:text="ToggleButton"
+                android:textOff="@string/empty_string"
+                android:textOn="@string/empty_string"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</layout>

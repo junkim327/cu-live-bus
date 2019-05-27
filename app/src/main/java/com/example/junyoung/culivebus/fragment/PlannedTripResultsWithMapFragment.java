@@ -1,23 +1,25 @@
 package com.example.junyoung.culivebus.fragment;
 
-import android.arch.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.BottomSheetBehavior;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.NavUtils;
-import android.support.v4.widget.NestedScrollView;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.LayoutManager;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
+import com.example.junyoung.culivebus.vo.Resource;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import androidx.fragment.app.Fragment;
+import androidx.core.app.NavUtils;
+import androidx.core.widget.NestedScrollView;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView.LayoutManager;
+import androidx.appcompat.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,19 +30,18 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.junyoung.culivebus.DeviceDimensionsHelper;
-import com.example.junyoung.culivebus.room.entity.RouteInfo;
+import com.example.junyoung.culivebus.db.entity.RouteInfo;
 import com.example.junyoung.culivebus.ui.viewmodel.SharedDirectionInfoViewModel;
 import com.example.junyoung.culivebus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.culivebus.R;
-import com.example.junyoung.culivebus.httpclient.pojos.Shape;
+import com.example.junyoung.culivebus.db.entity.Shape;
 import com.example.junyoung.culivebus.ui.viewmodel.BusPathViewModel;
-import com.example.junyoung.culivebus.vo.Response;
 import com.example.junyoung.culivebus.ui.viewmodel.SharedTripViewModel;
 import com.example.junyoung.culivebus.util.TimeFormatter;
 import com.example.junyoung.culivebus.adapter.BusInfoInBottomSheetAdapter;
 import com.example.junyoung.culivebus.adapter.TripInfoInBottomSheetAdapter;
-import com.example.junyoung.culivebus.httpclient.pojos.Itinerary;
-import com.example.junyoung.culivebus.httpclient.pojos.Leg;
+import com.example.junyoung.culivebus.vo.Itinerary;
+import com.example.junyoung.culivebus.vo.Leg;
 import com.example.junyoung.culivebus.httpclient.pojos.Path;
 import com.example.junyoung.culivebus.util.UtilConnection;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -67,10 +68,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.Unbinder;
-
 public class PlannedTripResultsWithMapFragment extends Fragment implements OnMapReadyCallback {
   private static final int POLYLINE_STROKE_WIDTH_PX = 20;
   private static final String TAG = PlannedTripResultsWithMapFragment.class.getSimpleName();
@@ -83,7 +80,6 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
   private LayoutManager mTripLayoutManager;
   private RouteInfo mDirectionInfo;
   private GoogleMap mMap;
-  private Unbinder unbinder;
   private ConnectivityManager mConnectivityManager;
   private TripInfoInBottomSheetAdapter mTripAdapter;
   private BusInfoInBottomSheetAdapter mBusInfoAdapter;
@@ -93,23 +89,23 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
 
   private OnInternetConnectedListener mInternetConnectedCallback;
 
-  @BindView(R.id.toolbar_planned_trips_result_with_map)
-  Toolbar toolbar;
-  @BindView(R.id.textview_walk_time_bottom_sheet_planned_trip_results)
-  TextView mWalkTimeTextView;
-  @BindView(R.id.textview_travel_time_bottom_sheet_planned_trip_results)
-  TextView travelTimeTextView;
-  @BindView(R.id.textview_time_interval_bottom_sheet_planned_trip_results)
-  TextView timeIntervalTextView;
-
-  @BindView(R.id.constraint_layout_planned_trip_results)
-  ConstraintLayout tripInfoSubLayout;
-  @BindView(R.id.map2)
-  NestedScrollView bottomSheet;
-  @BindView(R.id.recyclerview_bus_info_bottom_sheet_planned_trip_results)
-  RecyclerView busInfoRecyclerView;
-  @BindView(R.id.recyclerview_planned_trip_info_bottom_sheet_planned_trip_results)
-  RecyclerView tripInfoRecyclerView;
+//  @BindView(R.id.toolbar_planned_trips_result_with_map)
+//  Toolbar toolbar;
+//  @BindView(R.id.textview_walk_time_bottom_sheet_planned_trip_results)
+//  TextView mWalkTimeTextView;
+//  @BindView(R.id.textview_travel_time_bottom_sheet_planned_trip_results)
+//  TextView travelTimeTextView;
+//  @BindView(R.id.textview_time_interval_bottom_sheet_planned_trip_results)
+//  TextView timeIntervalTextView;
+//
+//  @BindView(R.id.constraint_layout_planned_trip_results)
+//  ConstraintLayout tripInfoSubLayout;
+//  @BindView(R.id.map2)
+//  NestedScrollView bottomSheet;
+//  @BindView(R.id.recyclerview_bus_info_bottom_sheet_planned_trip_results)
+//  RecyclerView busInfoRecyclerView;
+//  @BindView(R.id.recyclerview_planned_trip_info_bottom_sheet_planned_trip_results)
+//  RecyclerView tripInfoRecyclerView;
 
   @Override
   public void onAttach(Context context) {
@@ -153,90 +149,89 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
     View view = null;
     if (mIsInternetConnected) {
       view = inflater.inflate(R.layout.fragment_planned_trips_result_with_map, container, false);
-      unbinder = ButterKnife.bind(this, view);
 
-      setToolbar();
-      setBusInfoRecyclerView();
-      setTripInfoRecyclerView();
-      setBottomSheetBehavior();
+//      setToolbar();
+//      setBusInfoRecyclerView();
+//      setTripInfoRecyclerView();
+//      setBottomSheetBehavior();
       loadMapFragment();
     }
 
     return view;
   }
 
-  private void setToolbar() {
-    setHasOptionsMenu(true);
-
-    if (getActivity() != null) {
-      ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-    }
-    toolbar.setTitleTextColor(Color.WHITE);
-    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
-    if (actionBar != null) {
-      actionBar.setTitle("Direction");
-      actionBar.setDisplayHomeAsUpEnabled(true);
-      actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_white_24dp);
-    }
-  }
-
-  private void setBusInfoRecyclerView() {
-    busInfoRecyclerView.setHasFixedSize(true);
-
-    LayoutManager layoutManager = new LinearLayoutManager(
-      getContext(), LinearLayoutManager.HORIZONTAL, false
-    );
-    busInfoRecyclerView.setLayoutManager(layoutManager);
-
-    mBusInfoAdapter = new BusInfoInBottomSheetAdapter(getContext());
-    busInfoRecyclerView.setAdapter(mBusInfoAdapter);
-  }
-
-  private void setTripInfoRecyclerView() {
-    tripInfoRecyclerView.setHasFixedSize(true);
-
-    mTripLayoutManager = new LinearLayoutManager(getActivity());
-    tripInfoRecyclerView.setLayoutManager(mTripLayoutManager);
-    //LayoutManager layoutManager = new LinearLayoutManager(getContext());
-    //tripInfoRecyclerView.setLayoutManager(layoutManager);
-
-    mTripAdapter = new TripInfoInBottomSheetAdapter(getContext());
-    tripInfoRecyclerView.setAdapter(mTripAdapter);
-
-    tripInfoRecyclerView.setNestedScrollingEnabled(false);
-  }
-
-  private void setBottomSheetBehavior() {
-    BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-    bottomSheetBehavior.setPeekHeight(
-      getResources().getDimensionPixelSize(R.dimen.sublayout_bottom_sheet_planned_trip_results)
-    );
-    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
-    bottomSheetBehavior.setFitToContents(false);
-
-    bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-      @Override
-      public void onStateChanged(@NonNull View view, int newState) {
-        if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
-          if (mMap != null) {
-            mMap.setPadding(0, 0, 0, getResources().getDimensionPixelSize(
-              R.dimen.sublayout_bottom_sheet_planned_trip_results));
-          }
-        } else if (newState == BottomSheetBehavior.STATE_HALF_EXPANDED) {
-          if (mMap != null) {
-            int topPadding = DeviceDimensionsHelper.getScreenHeight(getActivity()) / 2
-              - getResources().getDimensionPixelSize(R.dimen.small_toolbar_height);
-            mMap.setPadding(0, 0, 0, topPadding);
-          }
-        }
-      }
-
-      @Override
-      public void onSlide(@NonNull View view, float v) {
-
-      }
-    });
-  }
+//  private void setToolbar() {
+//    setHasOptionsMenu(true);
+//
+//    if (getActivity() != null) {
+//      ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+//    }
+//    toolbar.setTitleTextColor(Color.WHITE);
+//    ActionBar actionBar = ((AppCompatActivity) getActivity()).getSupportActionBar();
+//    if (actionBar != null) {
+//      actionBar.setTitle("Direction");
+//      actionBar.setDisplayHomeAsUpEnabled(true);
+//      actionBar.setHomeAsUpIndicator(R.drawable.ic_arrow_back_white_24dp);
+//    }
+//  }
+//
+//  private void setBusInfoRecyclerView() {
+//    busInfoRecyclerView.setHasFixedSize(true);
+//
+//    LayoutManager layoutManager = new LinearLayoutManager(
+//      getContext(), LinearLayoutManager.HORIZONTAL, false
+//    );
+//    busInfoRecyclerView.setLayoutManager(layoutManager);
+//
+//    mBusInfoAdapter = new BusInfoInBottomSheetAdapter(getContext());
+//    busInfoRecyclerView.setAdapter(mBusInfoAdapter);
+//  }
+//
+//  private void setTripInfoRecyclerView() {
+//    tripInfoRecyclerView.setHasFixedSize(true);
+//
+//    mTripLayoutManager = new LinearLayoutManager(getActivity());
+//    tripInfoRecyclerView.setLayoutManager(mTripLayoutManager);
+//    //LayoutManager layoutManager = new LinearLayoutManager(getContext());
+//    //tripInfoRecyclerView.setLayoutManager(layoutManager);
+//
+//    mTripAdapter = new TripInfoInBottomSheetAdapter(getContext());
+//    tripInfoRecyclerView.setAdapter(mTripAdapter);
+//
+//    tripInfoRecyclerView.setNestedScrollingEnabled(false);
+//  }
+//
+//  private void setBottomSheetBehavior() {
+//    BottomSheetBehavior bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+//    bottomSheetBehavior.setPeekHeight(
+//      getResources().getDimensionPixelSize(R.dimen.sublayout_bottom_sheet_planned_trip_results)
+//    );
+//    bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HALF_EXPANDED);
+//    bottomSheetBehavior.setFitToContents(false);
+//
+//    bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+//      @Override
+//      public void onStateChanged(@NonNull View view, int newState) {
+//        if (newState == BottomSheetBehavior.STATE_COLLAPSED) {
+//          if (mMap != null) {
+//            mMap.setPadding(0, 0, 0, getResources().getDimensionPixelSize(
+//              R.dimen.sublayout_bottom_sheet_planned_trip_results));
+//          }
+//        } else if (newState == BottomSheetBehavior.STATE_HALF_EXPANDED) {
+//          if (mMap != null) {
+//            int topPadding = DeviceDimensionsHelper.getScreenHeight(getActivity()) / 2
+//              - getResources().getDimensionPixelSize(R.dimen.small_toolbar_height);
+//            mMap.setPadding(0, 0, 0, topPadding);
+//          }
+//        }
+//      }
+//
+//      @Override
+//      public void onSlide(@NonNull View view, float v) {
+//
+//      }
+//    });
+//  }
 
   private void loadMapFragment() {
     SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
@@ -265,12 +260,12 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
     mSharedTripViewModel.getItinerary().observe(this, itinerary -> {
       if (itinerary != null) {
         mTripAdapter.updateItinerary(itinerary);
-        updateBottomSheetInfo(itinerary);
+        //updateBottomSheetInfo(itinerary);
         sortBusAndWalkList(itinerary);
         setTotalWalkMin();
         drawWalkPathPolyline(mWalkList);
         mBusInfoAdapter.updateBusList(mBusList);
-        mBusPathViewModel.requestPathList(mBusList);
+        mBusPathViewModel.initPathList(mBusList);
       }
     });
   }
@@ -280,13 +275,13 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
     super.onActivityCreated(savedInstanceState);
   }
 
-  private void processResponse(Response<List<Path>> response) {
-    switch (response.mStatus) {
+  private void processResponse(Resource<List<Path>> resource) {
+    switch (resource.status) {
       case LOADING:
         break;
       case SUCCESS:
-        if (response.mData != null) {
-          drawPolyline(response.mData);
+        if (resource.data != null) {
+          drawPolyline(resource.data);
         }
         break;
       case ERROR:
@@ -301,16 +296,16 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
       mMap.addMarker(new MarkerOptions()
         .position(
           new LatLng(
-            Double.valueOf(mDirectionInfo.getOriginLat()),
-            Double.valueOf(mDirectionInfo.getOriginLon())
+            Double.valueOf(mDirectionInfo.getStartingPointLat()),
+            Double.valueOf(mDirectionInfo.getStartingPointLon())
           )
         )
         .icon(BitmapDescriptorFactory.fromResource(R.drawable.starting_point_icon))
       );
 
       Log.d(TAG, "Origin : " + new LatLng(
-        Double.valueOf(mDirectionInfo.getOriginLat()),
-        Double.valueOf(mDirectionInfo.getOriginLon())
+        Double.valueOf(mDirectionInfo.getStartingPointLat()),
+        Double.valueOf(mDirectionInfo.getStartingPointLon())
       ).toString());
 
       // Add destination marker
@@ -384,20 +379,20 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
       }
     }
   }
-
-  private void updateBottomSheetInfo(Itinerary itinerary) {
-    travelTimeTextView.setText(getResources().getString(
-      R.string.travel_time,
-      itinerary.getTravelTime())
-    );
-
-    timeIntervalTextView.setText(TimeFormatter.getTimeInterval(
-      getContext(),
-      itinerary.getStartTime(),
-      itinerary.getEndTime(),
-      getResources().getString(R.string.format_24hr))
-    );
-  }
+//
+//  private void updateBottomSheetInfo(Itinerary itinerary) {
+//    travelTimeTextView.setText(getResources().getString(
+//      R.string.travel_time,
+//      itinerary.getTravelTime())
+//    );
+//
+//    timeIntervalTextView.setText(TimeFormatter.getTimeInterval(
+//      getContext(),
+//      itinerary.getStartTime(),
+//      itinerary.getEndTime(),
+//      getResources().getString(R.string.format_24hr))
+//    );
+//  }
 
   private void sortBusAndWalkList(Itinerary itinerary) {
     for (Leg leg : itinerary.getLegs()) {
@@ -430,12 +425,12 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
   }
 
   private void setTotalWalkMin() {
-    if (mWalkList != null && mWalkList.size() > 0) {
-      mWalkTimeTextView.setText(getResources().getString(
-        R.string.walk_time,
-        getTotalWalkMin(mWalkList))
-      );
-    }
+//    if (mWalkList != null && mWalkList.size() > 0) {
+//      mWalkTimeTextView.setText(getResources().getString(
+//        R.string.walk_time,
+//        getTotalWalkMin(mWalkList))
+//      );
+//    }
   }
 
   @Override
@@ -466,12 +461,5 @@ public class PlannedTripResultsWithMapFragment extends Fragment implements OnMap
 
     mBusList.clear();
     mWalkList.clear();
-  }
-
-  @Override
-  public void onDestroyView() {
-    super.onDestroyView();
-
-    unbinder.unbind();
   }
 }

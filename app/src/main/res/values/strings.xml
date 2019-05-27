@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">CU Live Bus</string>
 
+    <string name="circle_border_path_name">circle_border_path</string>
+
     <string name="empty_string" />
 
     <string name="illini_union_latitude">40.109659</string>
@@ -22,13 +24,18 @@
 
         <!-- Snackbar Message -->
         <string name="snack_bar_network_error_message">The network connection flaked out</string>
+        <string name="snack_bar_retry">RETRY</string>
         <!-- Snackbar Message -->
     <!-- Util -->
 
     <!-- Adapter -->
-        <!-- BusDeparturesAdapter -->
+        <!-- DepartureListAdapter -->
         <string name="bus_direction_info">To %1$s</string>
         <string name="bus_remaining_arrival_time">%1$dm %2$ds</string>
+        <string name="soon">Soon</string>
+        <string name="arrived">Arrived</string>
+        <string name="time_until_departure_minutes_and_seconds">%1$dm %2$ds</string>
+        <string name="time_until_departure_seconds">%1ds</string>
     
     <!-- Adapter -->
 
@@ -38,13 +45,20 @@
     <!-- Controller -->
     
     <!-- Activity -->
+    <!-- DashboardActivity -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="search_title">Search</string>
+    <string name="map_title">Map</string>
+    <string name="direction_title">Direction</string>
+
         <!-- BusStopActivity -->
         <string name="distance_from_the_stop">%1$gft</string>
     <!-- Activity -->
 
     <!-- DashboardFragment -->
-    <string name="search_view_hint">Search bus stops</string>
-    <string name="guidance_message_one_text">Add favorites and</string>
+    <string name="homefragment_tag">HomeFragment</string>
+    <string name="search_view_hint">Search bus stops, or stop codes</string>
+    <string name="guidance_message_one_text">Add favorites and\nsee real time info right away</string>
     <string name="guidance_message_two_text">see real time info right away</string>
     <string name="data_provider_text">Data provided by CUMTD</string>
 
@@ -63,36 +77,54 @@
 
     <!-- SettingActivity -->
 
+    <!-- Common Content Description -->
+    <string name="logo_image_content_description">CU Live Bus logo</string>
+
     <!-- Fragment -->
 
-        <!-- DashboardFragment -->
-        <string name="logo_content_description">Logo</string>
-        <string name="add_favorites_content_description">Add favorites</string>
-        <!-- DashboardFragment -->
+    <!-- PermissionFragment -->
+    <string name="ok_i_understand">OK, I understand</string>
+    <string name="permission_image_content_description">Permission image</string>
 
-        <!-- NearByStopFragment -->
-        <string name="toolbar_title_near_by_stop_fragment">Nearby Stops</string>
-        <!-- NearByStopFragment -->
+    <!-- DownloadFragment -->
+    <string name="status_downloading">Downloading Bus data…</string>
+    <string name="status_preparing">Preparing to download…</string>
+    <string name="status_complete">Download complete</string>
+    <string name="status_fail">Download failed</string>
 
-        <!-- BusDeparturesFragment -->
-        <string name="message_when_no_departures_one">Nothing to see here.</string>
-        <string name="message_when_no_departures_two">Welcome to the void. There is nothing
-        here.</string>
-        <string name="message_when_no_departures_three">Tragically, nothing.</string>
-        <!-- BusDeparturesFragment -->
+    <!-- DashboardFragment -->
+    <string name="logo_content_description">CU Live Bus logo</string>
+    <string name="add_favorites_content_description">Add favorites</string>
 
-        <!-- BusStopSearchFragment -->
-        <string name="recent_search_header_BusStopSearchFragment">Recent Search</string>
-        <string name="no_search_result_content_description_BusStopSearchFragment">
-            No search Result</string>
-        <string name="no_search_result_text_BusStopSearchFragment">No results</string>
-        <!-- BusStopSearchFragment -->
+    <!-- NearByStopFragment -->
+    <string name="toolbar_title_near_by_stop_fragment">Nearby Stops</string>
 
-        <!-- PlannedTripResultsWithMapFragment -->
-        <string name="walk_time">Walk %1$smin</string>
+    <!-- DepartureFragment -->
+    <string name="message_when_no_departures_one">Nothing to see here.</string>
+    <string name="message_when_no_departures_two">Welcome to the void. There is nothing here.</string>
+    <string name="message_when_no_departures_three">Tragically, nothing.</string>
+
+    <!-- SearchFragment -->
+    <string name="recent_search_header_BusStopSearchFragment">Recent Search</string>
+    <string name="no_search_result_content_description_BusStopSearchFragment">No search Result</string>
+    <string name="no_search_result_text_BusStopSearchFragment">No results</string>
+
+    <!-- PlannedTripResultsWithMapFragment -->
+    <string name="walk_time">Walk %1$smin</string>
+
+    <!-- DirectionResultFragment -->
+    <string name="enter_destination_hint">Enter destination</string>
+    <string name="enter_starting_point_hint">Enter starting point</string>
+    <string name="swap_button_content_description">Swap location</string>
+    
+        <!-- DirectionResultListAdapter -->
         <string name="travel_time">%1$smin</string>
-        <!-- PlannedTripResultsWithMapFragment -->
+        <string name="fastest">Fastest</string>
 
+        <!-- ItineraryAdapter -->
+        <string name="bus_icon_content_description">Bus</string>
+        <string name="board">Board %1$s</string>
+        <string name="arrive_at">Arrive at %1$s</string>
     <!-- Fragment -->
 
     <!-- String for search view -->
@@ -108,16 +140,12 @@
         com.example.junyoung.uiucbus.SAVED_USER_PERMISSION_CODE</string>
     <string name="edit_home_menu_title">Edit</string>
 
-    <!-- String for DirectionSearchviewFragment -->
-    <string name="edittext_enter_destination_hint">Enter destination</string>
-    <string name="edittext_enter_starting_point_hint">Enter starting point</string>
-
     <!-- String TripInfoAdapter -->
     <string name="type_service">Service</string>
     <string name="type_walk">Walk</string>
 
-    <!-- String for fragment_google_search.xml -->
-    <string name="imagebutton_content_description_fragment_google_search">Search userPlace</string>
+    <!-- String for fragment_direction_searchr.xml -->
+    <string name="imagebutton_content_description_fragment_google_search">Search searchedPlace</string>
     <string name="current_location_button_text_fragment_google_search">Current location</string>
     <string name="choose_on_map_button_text_fragment_google_search">Choose on map</string>
 
@@ -128,6 +156,7 @@
     <!-- NoInternetConnectionFragment -->
     <string name="no_wifi_image_content_description">No internet connection!</string>
     <!-- message when connection is lost -->
+    <string name="no_internet_connection_message">You\'re offline. Please connect to the internet and try again.</string>
     <string name="no_internet_connection_message_one">You\'re offline</string>
     <string name="no_internet_connection_message_two">Please connect to the internet and\u0020</string>
     <string name="no_internet_connection_message_three">try again</string>
@@ -143,13 +172,13 @@
     <string name="champaign_south_west_lon">-88.329406</string>
 
     <!-- Permission Activity -->
-    <string name="location_permission_explanation">CU bus uses your location to search
+    <string name="location_permission_explanation">CU Live Bus uses your location to search
         for\nnearby buses and give you real-time\nbus departures</string>
     <string name="permission_text_not_now">Not now</string>
     <string name="ok_button_content_description">Grant location permission button</string>
     <string name="image_location_permission_content_description">Location permission image</string>
 
-    <!-- GoogleSearchFragment -->
+    <!-- DirectionSearchFragment -->
     <string name="recent_place_header">Recent</string>
     <string name="recent_searched_place_content_description">Recent searched place</string>
     
@@ -162,5 +191,37 @@
     <string name="more_recent_directions_button_text">More recent directions</string>
 
     <!-- String resources for testing TextView -->
+    <string name="stop_code_for_testing">MTD6451</string>
     <string name="very_long_text_for_testing">Apparently we had reached a great height in the atmosphere, for the sky was a dead black, and the stars had ceased to twinkle. By the same illusion which lifts the horizon of the sea to the level of the spectator on a hillside, the sable cloud beneath was dished out, and the car seemed to float in the middle of an immense dark sphere, whose upper half was strewn with silver.</string>
+
+    <!-- SettingsFragment -->
+    <string name="settings_toolbar_title">Settings</string>
+    <string name="settings_device_header">Device</string>
+    <string name="settings_background_location_title">Background Location</string>
+    <string name="settings_delete_search_history_title">Delete search history</string>
+    <string name="settings_delete_search_history_subtitle">You can free up storage by deleting your search history.</string>
+    <string name="settings_about_header">About</string>
+    <string name="settings_version_key">version_preference</string>
+    <string name="settings_version_title">Version</string>
+    <string name="settings_version_summary">1.0.0</string>
+    <string name="settings_third_party_libs_key">library_preference</string>
+    <string name="settings_third_party_libs_title">Third-party software</string>
+    <string name="settings_third_party_libs_summary">Sweet software that helped us.</string>
+    <string name="settings_data_attribution_title">Data attribution</string>
+
+    <!-- ThirdPartySoftwareFragment -->
+    <string name="third_party_title">Third-party software</string>
+    <string name="third_party_butter_knife_title">Butter Knife</string>
+    <string name="third_party_butter_knife_author">Jake Wharton</string>
+    <string name="third_party_crashlytics_title">Crashlytics</string>
+    <string name="third_party_crashlytics_author">Crashlytics, Inc.</string>
+    <string name="third_party_dagger_title">Dagger</string>
+    <string name="third_party_dagger_author">The Dagger Authors</string>
+    <string name="third_party_dagger_license">Copyright 2012 The Dagger Authors\n\nLicensed under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at\n\n   http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</string>
+    <string name="third_party_google_play_services_title">Google Play Services</string>
+    <string name="third_party_google_play_service_author">Google, Inc.</string>
+    <string name="third_party_leakcanary_title">LeakCanary</string>
+    <string name="third_party_leakcanary_author">Square, Inc.</string>
+
+    <string name="timber_license">Copyright 2013 Jake Wharton\n\nLicensed under the Apache License, Version 2.0 (the \"License\"); you may not use this file except in compliance with the License. You may obtain a copy of the License at\n\nhttp://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software distributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</string>
 </resources>

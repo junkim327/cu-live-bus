@@ -1,8 +1,8 @@
 package com.example.junyoung.culivebus.room.entity;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.support.annotation.NonNull;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.annotation.NonNull;
 
 @Entity(tableName = "user_saved_bus_stop_table",
   primaryKeys = {"uid", "saved_stop_id"})

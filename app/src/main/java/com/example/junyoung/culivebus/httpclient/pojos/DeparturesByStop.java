@@ -10,6 +10,10 @@ public class DeparturesByStop {
   @Expose
   private ArrayList<Departure> departures;
 
+  public DeparturesByStop(Status status) {
+    this.status = status;
+  }
+
   public Status getStatus() {
     return status;
   }

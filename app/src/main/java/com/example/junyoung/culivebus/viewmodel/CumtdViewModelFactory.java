@@ -10,12 +10,12 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-@Singleton
 public class CumtdViewModelFactory implements ViewModelProvider.Factory {
-  private final Map<Class<? extends ViewModel>, Provider<ViewModel>>creators;
+  private final Map<Class<? extends ViewModel>, Provider<ViewModel>> creators;
 
   @Inject
-  public CumtdViewModelFactory(Map<Class<? extends ViewModel>, Provider<ViewModel>> creators) {
+  public CumtdViewModelFactory(Map<Class<? extends ViewModel>, Provider<ViewModel>>
+    creators) {
     this.creators = creators;
   }
 

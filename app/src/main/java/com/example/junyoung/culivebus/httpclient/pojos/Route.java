@@ -15,6 +15,14 @@ public class Route implements Parcelable {
   @SerializedName("route_text_color")
   private String routeTextColor;
 
+  public Route(String routeColor, String routeLongName,
+               String routeShortName, String routeTextColor) {
+    this.routeColor = routeColor;
+    this.routeLongName = routeLongName;
+    this.routeShortName = routeShortName;
+    this.routeTextColor = routeTextColor;
+  }
+
   public String getRouteColor() {
     return routeColor;
   }

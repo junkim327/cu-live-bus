@@ -6,10 +6,25 @@
     <dimen name="sublayout_bottom_sheet_planned_trip_results">154dp</dimen>
     <dimen name="bus_stop_info_card_height">86dp</dimen>
     <dimen name="bus_info_card_height">126dp</dimen>
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="bottom_navigation_height">56dp</dimen>
 
     <dimen name="icon_height_and_width">24dp</dimen>
 
     <!-- Elevation -->
         <dimen name="toolbar_elevation">4dp</dimen>
     <!-- Elevation -->
+
+    <!-- Margin -->
+    <dimen name="margin_small">8dp</dimen>
+    <dimen name="margin_normal">16dp</dimen>
+    <dimen name="margin_large">32dp</dimen>
+    <dimen name="margin_floating_action_button">16dp</dimen>
+    <dimen name="margin_dialog_vertical">32dp</dimen>
+    <dimen name="margin_dialog_horizontal">32dp</dimen>
+    <!-- Margin -->
+
+    <!-- Map -->
+    <item name="map_camera_bearing" format="float" type="dimen">0.0</item>
+    <item name="map_min_zoom" format="float" type="dimen">14.0</item>
 </resources>

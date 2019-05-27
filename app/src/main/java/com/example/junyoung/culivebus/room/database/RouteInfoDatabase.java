@@ -1,12 +1,12 @@
 package com.example.junyoung.culivebus.room.database;
 
-import android.arch.persistence.room.Database;
-import android.arch.persistence.room.Room;
-import android.arch.persistence.room.RoomDatabase;
+import androidx.room.Database;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 import android.content.Context;
 
-import com.example.junyoung.culivebus.room.dao.RouteInfoDao;
-import com.example.junyoung.culivebus.room.entity.RouteInfo;
+import com.example.junyoung.culivebus.db.dao.RouteInfoDao;
+import com.example.junyoung.culivebus.db.entity.RouteInfo;
 
 @Database(entities = {RouteInfo.class}, version = 1)
 public abstract class RouteInfoDatabase extends RoomDatabase {

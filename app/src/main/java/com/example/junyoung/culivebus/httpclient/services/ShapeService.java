@@ -9,7 +9,7 @@ import retrofit2.http.Query;
 
 public interface ShapeService {
   @GET("getshape")
-  Call<Path> getShape(@Query("key") String key,
+  Single<Path> getShape(@Query("key") String key,
                       @Query("shape_id") String shapeId);
 
   @GET("getshapebetweenstops")

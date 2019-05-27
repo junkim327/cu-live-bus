@@ -1,16 +1,16 @@
 package com.example.junyoung.culivebus.adapter;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.junyoung.culivebus.R;
+import com.example.junyoung.culivebus.db.entity.SearchedPlace;
 import com.example.junyoung.culivebus.util.listener.RecyclerviewClickListener;
-import com.example.junyoung.culivebus.room.entity.UserPlace;
 
 import java.util.List;
 
@@ -24,7 +24,6 @@ public class RecentPlaceAdapter
     public RecentPlaceViewHolder(View itemView, RecyclerviewClickListener listener) {
       super(itemView);
 
-      mPlaceNameTextView = itemView.findViewById(R.id.text_place_name_card_recent_place);
       mRecyclerviewClickListener = listener;
       itemView.setOnClickListener(this);
     }
@@ -39,7 +38,7 @@ public class RecentPlaceAdapter
   }
 
   private Context mContext;
-  private List<UserPlace> mUserPlaceList;
+  private List<SearchedPlace> mSearchedPlaceList;
   private RecyclerviewClickListener mRecyclerviewClickListener;
 
   public RecentPlaceAdapter(Context context, RecyclerviewClickListener listener) {
@@ -47,14 +46,14 @@ public class RecentPlaceAdapter
     mRecyclerviewClickListener = listener;
   }
 
-  public void setPlaceList(List<UserPlace> userPlaceList) {
-    mUserPlaceList = userPlaceList;
+  public void setPlaceList(List<SearchedPlace> searchedPlaceList) {
+    mSearchedPlaceList = searchedPlaceList;
     notifyDataSetChanged();
   }
 
-  public UserPlace getPlace(int position) {
-    if (mUserPlaceList != null) {
-      return mUserPlaceList.get(position);
+  public SearchedPlace getPlace(int position) {
+    if (mSearchedPlaceList != null) {
+      return mSearchedPlaceList.get(position);
     }
 
     return null;
@@ -65,7 +64,7 @@ public class RecentPlaceAdapter
   public RecentPlaceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
     LayoutInflater inflater = LayoutInflater.from(mContext);
 
-    View placeView = inflater.inflate(R.layout.card_recent_place, parent, false);
+    View placeView = inflater.inflate(R.layout.card_searched_place, parent, false);
 
     RecentPlaceViewHolder vh = new RecentPlaceViewHolder(
       placeView,
@@ -77,15 +76,15 @@ public class RecentPlaceAdapter
 
   @Override
   public void onBindViewHolder(@NonNull RecentPlaceViewHolder holder, int position) {
-    if (mUserPlaceList != null && mUserPlaceList.size() != 0) {
-      holder.mPlaceNameTextView.setText(mUserPlaceList.get(position).getPlaceName());
+    if (mSearchedPlaceList != null && mSearchedPlaceList.size() != 0) {
+      holder.mPlaceNameTextView.setText(mSearchedPlaceList.get(position).getPlaceName());
     }
   }
 
   @Override
   public int getItemCount() {
-    if (mUserPlaceList != null) {
-      return mUserPlaceList.size();
+    if (mSearchedPlaceList != null) {
+      return mSearchedPlaceList.size();
     } else {
       return 0;
     }

@@ -10,7 +10,6 @@ import android.net.ConnectivityManager;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.appcompat.widget.SearchView;
 
@@ -23,64 +22,38 @@ import android.view.ViewGroup;
 
 import com.example.junyoung.culivebus.binding.FragmentDataBindingComponent;
 import com.example.junyoung.culivebus.databinding.SearchFragmentBinding;
-import com.example.junyoung.culivebus.di.Injectable;
-import com.example.junyoung.culivebus.ui.common.BusStopListAdapter;
-import com.example.junyoung.culivebus.ui.common.NavigationController;
-import com.example.junyoung.culivebus.ui.viewmodel.BusStopViewModel;
+import com.example.junyoung.culivebus.ui.MainNavigationFragment;
+import com.example.junyoung.culivebus.ui.common.MainNavigationController;
+import com.example.junyoung.culivebus.ui.common.SharedStopPointViewModel;
+import com.example.junyoung.culivebus.ui.departure.DepartureActivity;
 import com.example.junyoung.culivebus.util.AutoClearedValue;
 import com.example.junyoung.culivebus.util.listener.OnInternetConnectedListener;
 import com.example.junyoung.culivebus.R;
-import com.example.junyoung.culivebus.ui.viewmodel.SharedStopPointViewModel;
 import com.example.junyoung.culivebus.util.UtilConnection;
 
 import javax.inject.Inject;
 
-import io.reactivex.disposables.CompositeDisposable;
+import dagger.android.support.DaggerFragment;
 import timber.log.Timber;
 
-public class SearchFragment extends Fragment implements Injectable {
+public class SearchFragment extends DaggerFragment implements MainNavigationFragment {
   @Inject
   ViewModelProvider.Factory viewModelFactory;
-  @Inject
-  NavigationController navigationController;
 
   DataBindingComponent dataBindingComponent = new FragmentDataBindingComponent(this);
   AutoClearedValue<SearchFragmentBinding> binding;
   AutoClearedValue<BusStopListAdapter> adapter;
 
-  private String mUid;
-  private int mClickTag;
-  private boolean mIsInternetConnected = true;
-  private ConnectivityManager mConnectivityManager;
-  private OnInternetConnectedListener mInternetConnectedCallback;
-
-  // ViewModels
   private SearchViewModel searchViewModel;
-  private SharedStopPointViewModel mSharedStopPointViewModel;
-
-  @Override
-  public void onAttach(Context context) {
-    super.onAttach(context);
-
-    try {
-      mInternetConnectedCallback = (OnInternetConnectedListener) context;
-    } catch (ClassCastException e) {
-      throw new ClassCastException(context.toString()
-        + " must implement OnInternetConnectedListener.");
-    }
-  }
 
   @Nullable
   @Override
-  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-    if (mConnectivityManager != null) {
-      mIsInternetConnected = UtilConnection.isInternetConnected(mConnectivityManager,
-        mInternetConnectedCallback, false);
-    }
-
+  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                           @Nullable Bundle savedInstanceState) {
     SearchFragmentBinding dataBinding = DataBindingUtil
-      .inflate(inflater, R.layout.search_fragment, container, false, dataBindingComponent);
+      .inflate(inflater, R.layout.fragment_search, container, false, dataBindingComponent);
     binding = new AutoClearedValue<>(this, dataBinding);
+
     return dataBinding.getRoot();
   }
 
@@ -93,20 +66,28 @@ public class SearchFragment extends Fragment implements Injectable {
     initRecyclerView();
 
     BusStopListAdapter rvAdapter = new BusStopListAdapter(dataBindingComponent, stopPoint -> {
-      stopPoint.setRecentSearched(true);
-      searchViewModel.updateBusStop(stopPoint);
-      navigationController.navigateToDeparture(stopPoint);
+      if (stopPoint != null) {
+        stopPoint.setRecentSearched(true);
+        searchViewModel.updateBusStop(stopPoint);
+        Timber.d(stopPoint.getStopId());
+        startActivity(DepartureActivity.starterIntent(getContext(), stopPoint));
+      }
     });
     binding.get().busStopList.setAdapter(rvAdapter);
     adapter = new AutoClearedValue<>(this, rvAdapter);
 
-    mSharedStopPointViewModel = ViewModelProviders.of(getActivity())
-      .get(SharedStopPointViewModel.class);
-
     initSearchView();
+
+    binding.get().setCallback(() -> {
+      FragmentManager fm = getFragmentManager();
+      if (fm != null && fm.getBackStackEntryCount() > 0) {
+        fm.popBackStack();
+      }
+    });
   }
 
   private void initRecyclerView() {
+    searchViewModel.setQuery("");
     searchViewModel.getBusStops().observe(this, busStopResource -> {
       binding.get().setBusStopResource(busStopResource);
       adapter.get().replace(busStopResource == null ? null : busStopResource.data);
@@ -125,10 +106,10 @@ public class SearchFragment extends Fragment implements Injectable {
       }
     });
 
-    initSearchQueryTestListener();
+    initSearchQueryTextListener();
   }
 
-  private void initSearchQueryTestListener() {
+  private void initSearchQueryTextListener() {
     binding.get().searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
       @Override
       public boolean onQueryTextSubmit(String query) {
@@ -151,14 +132,9 @@ public class SearchFragment extends Fragment implements Injectable {
   public void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    mConnectivityManager = (ConnectivityManager) getActivity().getSystemService(
-      Context.CONNECTIVITY_SERVICE
-    );
-
     SharedPreferences sharedPref = getActivity().getSharedPreferences(
       getString(R.string.preference_file_key), Context.MODE_PRIVATE
     );
-    mUid = sharedPref.getString(getString(R.string.saved_uid), null);
   }
 
   @Override

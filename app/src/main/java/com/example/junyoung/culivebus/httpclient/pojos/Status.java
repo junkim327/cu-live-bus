@@ -8,6 +8,10 @@ public class Status {
   @Expose
   private String msg;
 
+  public Status(int code) {
+    this.code = code;
+  }
+
   public int getCode() {
     return code;
   }

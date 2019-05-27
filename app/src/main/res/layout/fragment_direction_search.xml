@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data class="DirectionSearchFragmentBinding">
+        <import type="android.view.View"/>
+        <variable
+            name="sharedPlaceViewModel"
+            type="com.example.junyoung.culivebus.ui.direction.SharedPlaceViewModel"/>
+        <variable
+            name="directionSearchViewModel"
+            type="com.example.junyoung.culivebus.ui.direction.search.DirectionSearchViewModel"/>
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/constraint_layout_background_color">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white"
+            android:elevation="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/nestedScrollView2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="spread_inside">
+
+            <Button
+                android:id="@+id/upButton"
+                style="@style/Widget.CuLiveBus.DirectionSearchButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center_vertical|start"
+                android:background="@color/colorPrimary"
+                android:contentDescription="@string/imagebutton_content_description_fragment_google_search"
+                app:icon="@drawable/ic_arrow_back"
+                app:layout_constraintEnd_toStartOf="@+id/googleSearchButton"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="spread_inside"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/googleSearchButton"
+                style="@style/Widget.CuLiveBus.DirectionSearchButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:focusable="false"
+                android:text="@{sharedPlaceViewModel.isStartingPointEditTextClicked ? @string/enter_starting_point_hint : @string/enter_destination_hint}"
+                android:textAlignment="textStart"
+                android:textSize="16sp"
+                app:icon="@drawable/ic_search_white"
+                app:iconGravity="start"
+                app:iconPadding="16dp"
+                app:layout_constraintBottom_toTopOf="@+id/button_current_location_google_search"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/upButton"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_chainStyle="packed"
+                tools:text="@string/enter_destination_hint" />
+
+            <Button
+                android:id="@+id/button_current_location_google_search"
+                style="@style/Widget.CuLiveBus.DirectionSearchButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/current_location_button_text_fragment_google_search"
+                android:textAlignment="center"
+                app:icon="@drawable/ic_near_me_white"
+                app:iconGravity="textStart"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/chooseOnMapButton"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/googleSearchButton" />
+
+            <Button
+                android:id="@+id/chooseOnMapButton"
+                style="@style/Widget.CuLiveBus.DirectionSearchButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/choose_on_map_button_text_fragment_google_search"
+                android:textAlignment="center"
+                app:icon="@drawable/ic_marker_on_map"
+                app:iconGravity="textStart"
+                app:layout_constraintBottom_toBottomOf="@+id/button_current_location_google_search"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/button_current_location_google_search"
+                app:layout_constraintTop_toTopOf="@+id/button_current_location_google_search" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/nestedScrollView2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:fillViewport="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_header_recent_place"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@color/white"
+                    android:fontFamily="@font/oxygen_bold"
+                    android:paddingStart="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingEnd="16dp"
+                    android:paddingBottom="8dp"
+                    android:text="RECENT"
+                    android:textAlignment="textStart"
+                    android:textAllCaps="false"
+                    android:textColor="#696969"
+                    android:visibility="@{(directionSearchViewModel.resultCount != 0) ? View.VISIBLE :  View.GONE}"
+                    app:layout_constraintBottom_toTopOf="@+id/searchedPlaceList"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.0"
+                    app:layout_constraintVertical_chainStyle="packed"
+                    tools:visibility="visible" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/searchedPlaceList"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="vertical"
+                    android:visibility="@{(directionSearchViewModel.resultCount != 0) ? View.VISIBLE :  View.GONE}"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintBottom_toTopOf="@+id/moreSearchHistoryButton"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/text_header_recent_place"
+                    tools:itemCount="3"
+                    tools:listitem="@layout/card_searched_place" />
+
+                <Button
+                    android:id="@+id/moreSearchHistoryButton"
+                    style="@style/Widget.CuLiveBus.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:backgroundTint="@color/white"
+                    android:fontFamily="@font/oxygen_bold"
+                    android:paddingLeft="56dp"
+                    android:text="MORE FROM RECENT HISTORY"
+                    android:textAlignment="textStart"
+                    android:textColor="#9B9B9B"
+                    android:textSize="14sp"
+                    android:visibility="@{(directionSearchViewModel.resultCount > 7) ? View.VISIBLE :  View.GONE}"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/searchedPlaceList" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.core.widget.NestedScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

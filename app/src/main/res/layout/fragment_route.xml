@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data class="RouteFragmentBinding">
+        <import type="com.example.junyoung.culivebus.R"/>
+        <variable name="viewModel"
+            type="com.example.junyoung.culivebus.ui.route.RouteViewModel" />
+        <variable name="busMarker" type="com.google.android.gms.maps.model.Marker"/>
+        <variable name="stopPoint" type="com.example.junyoung.culivebus.db.entity.StopPoint"/>
+    </data>
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/constraint_layout_background_color">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar_bus_routes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/toolbar_gradient_background_color"
+            android:elevation="4dp"
+            android:minHeight="@dimen/small_size_toolbar_height"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:titleTextColor="@color/white">
+
+        </androidx.appcompat.widget.Toolbar>
+
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/mapViewBusRoute"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible"
+            app:cameraBearing="@dimen/map_camera_bearing"
+            app:mapType="normal"
+            app:customLatLng1="@{viewModel.latLng}"
+            app:customZoom1="@{viewModel.zoom}"
+            app:shouldAnimate1="@{viewModel.shouldAnimate}"
+            app:shapeList="@{viewModel.shapeList}"
+            app:routeColor="@{@string/hex_color(viewModel.routeColor)}"
+            app:minZoomPreference="@{R.dimen.map_min_zoom}" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_bus_routes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/margin_floating_action_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:onClick="@{(view) -> viewModel.floatingActionButtonClicked(view)}"
+            app:backgroundTint="@color/white"
+            app:layout_anchor="@id/bus_route_list"
+            app:layout_anchorGravity="top|end"
+            app:srcCompat="@drawable/ic_refresh" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/bus_route_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:translationZ="4dp"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_behavior="@string/bottom_sheet_behavior"
+            app:behavior_peekHeight="212dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/image_drag_card_bottom_sheet_header">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+        <include
+            android:id="@+id/busStopInfoCard"
+            layout="@layout/card_bus_stop_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:visibility="gone"
+            app:stopPoint="@{stopPoint}"/>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

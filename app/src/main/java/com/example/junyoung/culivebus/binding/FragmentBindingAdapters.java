@@ -2,8 +2,10 @@ package com.example.junyoung.culivebus.binding;
 
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.junyoung.culivebus.R;
+import com.example.junyoung.culivebus.util.TimeFormatter;
 
 import javax.inject.Inject;
 
@@ -25,5 +27,11 @@ public class FragmentBindingAdapters {
     } else {
       view.setImageResource(R.drawable.ic_directions_bus_black_24dp);
     }
+  }
+
+  @BindingAdapter(value = {"startTime", "endTime"}, requireAll = true)
+  public static void getTimeInterval(TextView textView, String startTime, String endTime) {
+    textView.setText(TimeFormatter.getTimeInterval(textView.getContext(), startTime, endTime,
+      "24hr"));
   }
 }

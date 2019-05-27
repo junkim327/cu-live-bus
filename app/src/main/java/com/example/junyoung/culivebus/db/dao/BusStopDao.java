@@ -22,6 +22,9 @@ public interface BusStopDao {
   @Query("SELECT COUNT(*) FROM busStopTable")
   LiveData<Integer> countBusStops();
 
+  @Query("SELECT * FROM busStopTable WHERE isRecentSearched")
+  LiveData<List<StopPoint>> loadRecentlySearchedBusStops();
+
   @Update
   void updateBusStop(StopPoint stopPoint);
 

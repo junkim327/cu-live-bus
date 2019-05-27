@@ -1,6 +1,6 @@
 package com.example.junyoung.culivebus.httpclient.pojos;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -16,6 +16,14 @@ public class Departure implements Comparable, Cloneable {
   private String expected;
   @SerializedName("vehicle_id")
   private String vehicleId;
+
+  public Departure(Trip trip, Route route, String headSign, String expected, String vehicleId) {
+    this.trip = trip;
+    this.route = route;
+    this.headsign = headSign;
+    this.expected = expected;
+    this.vehicleId = vehicleId;
+  }
 
   public Trip getTrip() {
     return trip;

@@ -16,6 +16,13 @@ public class Trip implements Parcelable {
   @SerializedName("trip_headsign")
   private String tripHeadSign;
 
+  public Trip(String tripId, String shapeId, String direction, String tripHeadSign) {
+    this.tripId = tripId;
+    this.shapeId = shapeId;
+    this.direction = direction;
+    this.tripHeadSign = tripHeadSign;
+  }
+
   public String getTripId() {
     return tripId;
   }

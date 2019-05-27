@@ -1,13 +1,11 @@
 package com.example.junyoung.culivebus.httpclient.repository;
 
-import androidx.lifecycle.MutableLiveData;
-
 import com.example.junyoung.culivebus.Constants;
 import com.example.junyoung.culivebus.httpclient.RetrofitBuilder;
-import com.example.junyoung.culivebus.httpclient.pojos.Leg;
+import com.example.junyoung.culivebus.vo.Leg;
 import com.example.junyoung.culivebus.httpclient.pojos.Path;
-import com.example.junyoung.culivebus.httpclient.pojos.Service;
-import com.example.junyoung.culivebus.httpclient.pojos.Shape;
+import com.example.junyoung.culivebus.vo.Service;
+import com.example.junyoung.culivebus.db.entity.Shape;
 import com.example.junyoung.culivebus.httpclient.services.ShapeService;
 
 import java.util.ArrayList;
@@ -15,9 +13,6 @@ import java.util.List;
 
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class BusPathRepository {
   private ShapeService mShapeService;

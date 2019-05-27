@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data class="LicenseDialogFragmentBinding">
+        <variable name="softwareName" type="String"/>
+        <variable name="license" type="String"/>
+    </data>
+
+    <LinearLayout
+        android:id="@+id/layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="0dp">
+
+        <TextView
+            android:id="@+id/textView_license_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{softwareName}"
+            android:textAppearance="@style/TextAppearance.CuLiveBus.DialogTitle"
+            tools:text="Timber License"/>
+
+        <TextView
+            android:id="@+id/textView_license_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textAppearance="@style/TextAppearance.CuLiveBus.DialogBody"
+            android:text="@{license}"
+            tools:text="@string/timber_license" />
+
+        <Button
+            android:id="@+id/okButton"
+            style="@style/Widget.CuLiveBus.Dialog.PositiveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OK" />
+
+    </LinearLayout>
+</layout>

@@ -3,6 +3,7 @@ package com.example.junyoung.culivebus.httpclient.pojos;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.example.junyoung.culivebus.db.entity.Shape;
 import com.google.gson.annotations.Expose;
 
 import java.util.ArrayList;

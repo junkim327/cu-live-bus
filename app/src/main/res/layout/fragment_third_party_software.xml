@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data class="ThirdPartySoftwareFragmentBinding">
+
+    </data>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"
+                android:minHeight="?attr/actionBarSize"
+                android:theme="?attr/actionBarTheme"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:navigationIcon="@drawable/ic_arrow_back"
+                app:title="@string/third_party_title"
+                app:titleTextColor="@color/white">
+
+            </androidx.appcompat.widget.Toolbar>
+
+            <Button
+                android:id="@+id/button_butter_knife"
+                style="@style/Widget.CuLiveBus.ThirdPartySoftwareButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:softwareName="@{@string/third_party_butter_knife_title}"
+                app:author="@{@string/third_party_butter_knife_author}"
+                app:license="@{@string/third_party_dagger_license}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+            <Button
+                android:id="@+id/button_crashlytics"
+                style="@style/Widget.CuLiveBus.ThirdPartySoftwareButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:softwareName="@{@string/third_party_crashlytics_title}"
+                app:author="@{@string/third_party_crashlytics_author}"
+                app:license="@{@string/third_party_dagger_license}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/button_butter_knife"
+                tools:text="@string/third_party_crashlytics_title" />
+
+            <Button
+                android:id="@+id/button_dagger"
+                style="@style/Widget.CuLiveBus.ThirdPartySoftwareButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:softwareName="@{@string/third_party_dagger_title}"
+                app:author="@{@string/third_party_dagger_author}"
+                app:license="@{@string/third_party_dagger_license}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/button_crashlytics"
+                tools:text="@string/third_party_dagger_title" />
+
+            <Button
+                android:id="@+id/button_google_play_services"
+                style="@style/Widget.CuLiveBus.ThirdPartySoftwareButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:softwareName="@{@string/third_party_google_play_services_title}"
+                app:author="@{@string/third_party_google_play_service_author}"
+                app:license="@{@string/third_party_dagger_license}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/button_dagger"
+                tools:text="@string/third_party_google_play_services_title" />
+
+            <Button
+                android:id="@+id/button_leakcanary"
+                style="@style/Widget.CuLiveBus.ThirdPartySoftwareButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:softwareName="@{@string/third_party_leakcanary_title}"
+                app:author="@{@string/third_party_leakcanary_author}"
+                app:license="@{@string/third_party_dagger_license}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/button_google_play_services"
+                tools:text="@string/third_party_leakcanary_title" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</layout>

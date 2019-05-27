@@ -4,11 +4,11 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.junyoung.culivebus.httpclient.pojos.Leg;
+import com.example.junyoung.culivebus.vo.Leg;
 import com.example.junyoung.culivebus.httpclient.pojos.Path;
-import com.example.junyoung.culivebus.httpclient.pojos.Shape;
+import com.example.junyoung.culivebus.db.entity.Shape;
 import com.example.junyoung.culivebus.httpclient.repository.BusPathRepository;
-import com.example.junyoung.culivebus.vo.Response;
+import com.example.junyoung.culivebus.vo.Resource;
 
 import java.util.List;
 
@@ -17,9 +17,9 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class BusPathViewModel extends ViewModel {
-  private final MutableLiveData<Response<List<Shape>>> mShapeResponse = new MutableLiveData<>();
+  private final MutableLiveData<Resource<List<Shape>>> mShapeResponse = new MutableLiveData<>();
   private BusPathRepository mBusPathRepo;
-  private final MutableLiveData<Response<List<Path>>> mResponse = new MutableLiveData<>();
+  private final MutableLiveData<Resource<List<Path>>> mResponse = new MutableLiveData<>();
   private final CompositeDisposable mDisposable = new CompositeDisposable();
 
   public BusPathViewModel() {
@@ -30,8 +30,8 @@ public class BusPathViewModel extends ViewModel {
     mDisposable.add(mBusPathRepo.getBusPath(shapeId)
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
-      .subscribe(shapes -> mShapeResponse.setValue(Response.success(shapes)),
-        throwable -> mShapeResponse.setValue(Response.error(throwable))
+      .subscribe(shapes -> mShapeResponse.setValue(Resource.success(shapes)),
+        throwable -> mShapeResponse.setValue(Resource.success(null))
       )
     );
   }
@@ -39,17 +39,16 @@ public class BusPathViewModel extends ViewModel {
   public void initPathList(List<Leg> busList) {
     mDisposable.add(mBusPathRepo.getBusPathList(busList)
       .observeOn(AndroidSchedulers.mainThread())
-      .doOnSubscribe(__ -> mResponse.setValue(Response.loading()))
-      .subscribe(pathList -> mResponse.setValue(Response.success(pathList)),
-        throwable -> mResponse.setValue(Response.error(throwable)))
-    );
+      .subscribe(pathList -> mResponse.setValue(Resource.success(pathList)),
+        throwable -> mResponse.setValue(Resource.success(null))
+    ));
   }
 
-  public LiveData<Response<List<Shape>>> getShapeResponse() {
+  public LiveData<Resource<List<Shape>>> getShapeResponse() {
     return mShapeResponse;
   }
 
-  public LiveData<Response<List<Path>>> getBusPathList() {
+  public LiveData<Resource<List<Path>>> getBusPathList() {
     return mResponse;
   }
 

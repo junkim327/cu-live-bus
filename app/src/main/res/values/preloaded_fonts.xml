@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <array name="preloaded_fonts" translatable="false">
-        <item>@font/cabin</item>
         <item>@font/cabin_medium</item>
+        <item>@font/droid_sans_mono</item>
         <item>@font/lato</item>
         <item>@font/lato_bold</item>
         <item>@font/montserrat</item>
         <item>@font/nunito</item>
         <item>@font/oxygen_bold</item>
+        <item>@font/pt_mono</item>
+        <item>@font/pt_sans_bold</item>
         <item>@font/roboto</item>
         <item>@font/roboto_medium</item>
+        <item>@font/roboto_mono</item>
+        <item>@font/roboto_mono_medium</item>
         <item>@font/roboto_slab</item>
         <item>@font/source_sans_pro</item>
+        <item>@font/space_mono</item>
+        <item>@font/ubuntu_mono</item>
     </array>
 </resources>

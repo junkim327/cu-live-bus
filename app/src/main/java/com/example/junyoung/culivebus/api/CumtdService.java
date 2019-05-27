@@ -2,9 +2,12 @@ package com.example.junyoung.culivebus.api;
 
 import com.example.junyoung.culivebus.httpclient.pojos.BusStops;
 import com.example.junyoung.culivebus.httpclient.pojos.DeparturesByStop;
-import com.example.junyoung.culivebus.httpclient.pojos.StopTimesByTrip;
-import com.example.junyoung.culivebus.httpclient.pojos.VehicleData;
-import com.example.junyoung.culivebus.vo.response.GetStopsResponse;
+import com.example.junyoung.culivebus.vo.response.PlannedTripsResponse;
+import com.example.junyoung.culivebus.vo.response.StopTimesResponse;
+import com.example.junyoung.culivebus.vo.response.VehicleResponse;
+import com.example.junyoung.culivebus.vo.response.DeparturesResponse;
+import com.example.junyoung.culivebus.vo.response.ShapeResponse;
+import com.example.junyoung.culivebus.vo.response.StopsResponse;
 
 import androidx.lifecycle.LiveData;
 import io.reactivex.Observable;
@@ -15,31 +18,47 @@ import retrofit2.http.Query;
 
 public interface CumtdService {
   @GET("getvehicle")
-  Single<VehicleData> getVehicleSingle(@Query("key") String key,
-                                       @Query("vehicle_id") String vehicle_id);
+  Single<VehicleResponse> getVehicleSingle(@Query("key") String key,
+                                           @Query("vehicle_id") String vehicle_id);
 
   @GET("getdeparturesbystop")
-  Observable<DeparturesByStop> getDeparturesByStop(@Query("key") String key,
-                                                   @Query("stop_id") String stopId);
+  Observable<DeparturesByStop> getDeparturesByStopObservable(@Query("key") String key,
+                                                             @Query("stop_id") String stopId);
 
   @GET("getdeparturesbystop")
-  Call<DeparturesByStop> getDeparturesByStop1(@Query("key") String key,
-                                              @Query("stop_id") String stopId);
-
-  @GET("getstopsbylatlon")
-  Call<BusStops> getNearestStops(@Query("key") String key,
-                                 @Query("lat") String lat,
-                                 @Query("lon") String lon,
-                                 @Query("count") String count);
+  Call<DeparturesResponse> getDeparturesByStop(@Query("key") String key,
+                                                                @Query("stop_id") String stopId);
 
   @GET("getstops")
-  LiveData<ApiResponse<GetStopsResponse>> getStops(@Query("key") String key);
+  LiveData<ApiResponse<StopsResponse>> getStops(@Query("key") String key);
+
+  @GET("getstopsbylatlon")
+  Call<StopsResponse> getStopsByLatLon(@Query("key") String key,
+                                       @Query("lat") String lat,
+                                       @Query("lon") String lon,
+                                       @Query("count") String count);
 
   @GET("getstopsbysearch")
   Call<BusStops> getStopsBySearch(@Query("key") String key,
                                   @Query("query") String search);
 
+  @GET("getshape")
+  LiveData<ApiResponse<ShapeResponse>> getShapes(@Query("key") String key,
+                                                 @Query("shape_id") String shapeId,
+                                                 @Query("changeset_id") String changesetId);
+
+  @GET("getvehicle")
+  Call<VehicleResponse> getVehicle(@Query("key") String key,
+                                       @Query("vehicle_id") String vehicle_id);
+
   @GET("getstoptimesbytrip")
-  LiveData<ApiResponse<StopTimesByTrip>> getStopTimesByTrip(@Query("key") String key,
-                                                            @Query("trip_id") String tripId);
+  Call<StopTimesResponse> getStopTimesByTrip(@Query("key") String key,
+                                             @Query("trip_id") String tripId);
+
+  @GET("getplannedtripsbylatlon")
+  Call<PlannedTripsResponse> getPlannedTrips(@Query("key") String key,
+                                             @Query("origin_lat") String originLat,
+                                             @Query("origin_lon") String originLon,
+                                             @Query("destination_lat") String destinationLat,
+                                             @Query("destination_lon") String destinationLon);
 }

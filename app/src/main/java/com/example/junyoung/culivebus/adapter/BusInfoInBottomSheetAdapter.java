@@ -3,9 +3,9 @@ package com.example.junyoung.culivebus.adapter;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView.Adapter;
-import android.support.v7.widget.RecyclerView.ViewHolder;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView.Adapter;
+import androidx.recyclerview.widget.RecyclerView.ViewHolder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +13,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.junyoung.culivebus.R;
-import com.example.junyoung.culivebus.httpclient.pojos.Leg;
-import com.example.junyoung.culivebus.httpclient.pojos.Service;
+import com.example.junyoung.culivebus.vo.Leg;
+import com.example.junyoung.culivebus.vo.Service;
 
 import java.util.Collections;
 import java.util.List;

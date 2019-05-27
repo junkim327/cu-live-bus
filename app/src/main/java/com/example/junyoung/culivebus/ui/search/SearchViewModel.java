@@ -15,6 +15,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 import androidx.lifecycle.ViewModel;
+import timber.log.Timber;
 
 public class SearchViewModel extends ViewModel {
   private final BusStopRepository busStopRepository;
@@ -25,8 +26,10 @@ public class SearchViewModel extends ViewModel {
   SearchViewModel(BusStopRepository busStopRepository) {
     this.busStopRepository = busStopRepository;
     busStops = Transformations.switchMap(query, search -> {
-      if (search == null || search.trim().length() == 0) {
-        return AbsentLiveData.create();
+      Timber.d("Switchmap has been called");
+      if (search == null || search.trim().length() == 1) {
+        Timber.d("Empty");
+        return busStopRepository.loadRecentlySearchedBusStops();
       } else {
         return busStopRepository.searchBusStops(search);
       }

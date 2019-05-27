@@ -6,11 +6,10 @@ import androidx.annotation.NonNull;
 import com.example.junyoung.culivebus.Constants;
 import com.example.junyoung.culivebus.httpclient.RetrofitBuilder;
 import com.example.junyoung.culivebus.httpclient.pojos.Vehicle;
-import com.example.junyoung.culivebus.httpclient.pojos.VehicleData;
+import com.example.junyoung.culivebus.vo.response.VehicleResponse;
 import com.example.junyoung.culivebus.httpclient.services.BusLocationService;
 
 import io.reactivex.Single;
-import io.reactivex.functions.Function;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -25,14 +24,14 @@ public class BusLocationRepository {
 
   public Single<Vehicle> getBus(String busId) {
     return mBusLocationService.getVehicleSingle(Constants.API_KEY, busId)
-      .map(vehicleData -> vehicleData.getVehicles().get(0));
+      .map(vehicleResponse -> vehicleResponse.getVehicles().get(0));
   }
 
   public void getBusLocation(MutableLiveData<Vehicle> data, String busId) {
     mBusLocationService.getBusLocation(Constants.API_KEY, busId)
-      .enqueue(new Callback<VehicleData>() {
+      .enqueue(new Callback<VehicleResponse>() {
         @Override
-        public void onResponse(@NonNull Call<VehicleData> call, @NonNull Response<VehicleData> response) {
+        public void onResponse(@NonNull Call<VehicleResponse> call, @NonNull Response<VehicleResponse> response) {
           if (response.isSuccessful()) {
             if (response.body() != null) {
               data.setValue(response.body().getVehicles().get(0));
@@ -41,7 +40,7 @@ public class BusLocationRepository {
         }
 
         @Override
-        public void onFailure(@NonNull Call<VehicleData> call, @NonNull Throwable t) {
+        public void onFailure(@NonNull Call<VehicleResponse> call, @NonNull Throwable t) {
 
         }
       });

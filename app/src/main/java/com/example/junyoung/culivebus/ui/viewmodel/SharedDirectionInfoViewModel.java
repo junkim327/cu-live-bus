@@ -1,10 +1,10 @@
 package com.example.junyoung.culivebus.ui.viewmodel;
 
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.MutableLiveData;
-import android.arch.lifecycle.ViewModel;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
 
-import com.example.junyoung.culivebus.room.entity.RouteInfo;
+import com.example.junyoung.culivebus.db.entity.RouteInfo;
 
 public class SharedDirectionInfoViewModel extends ViewModel {
  private final MutableLiveData<RouteInfo> mRouteInfo = new MutableLiveData<>();

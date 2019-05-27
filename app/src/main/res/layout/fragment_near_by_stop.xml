@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/coordinator_layout_near_by_stop"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <include
-        android:id="@+id/toolbar_near_by_stop"
-        layout="@layout/toolbar_small_size_transparent" />
-
-    <fragment
-        android:id="@+id/map_near_by_stop"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data class="NearByStopFragmentBinding">
+        <variable
+            name="nearByStopViewModel"
+            type="com.example.junyoung.culivebus.ui.nearbystop.NearByStopViewModel"/>
+        <variable name="stopPoint" type="com.example.junyoung.culivebus.db.entity.StopPoint"/>
+    </data>
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
 
-    <include
-        android:id="@+id/bottom_sheet_near_by_stop"
-        layout="@layout/bottom_sheet_bus_stop_info" />
+        <com.google.android.gms.maps.MapView
+            android:id="@+id/map_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cameraZoom="16"
+            app:latlng="@{nearByStopViewModel.latLng}"
+            app:mapPaddingBottom="@{nearByStopViewModel.mapPaddingBottom}"
+            app:clusterClickEvent="@{nearByStopViewModel.clusterClickEvent}"/>
 
-</android.support.design.widget.CoordinatorLayout>
+        <include
+            android:id="@+id/bottomSheet"
+            layout="@layout/bottom_sheet_bus_stop_info"
+            app:nearByStopViewModel="@{nearByStopViewModel}" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>
